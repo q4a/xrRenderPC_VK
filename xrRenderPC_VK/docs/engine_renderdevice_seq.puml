@@ -1,0 +1,54 @@
+@startuml
+
+header CRenderDevice::on_idle()
+footer xrRenderPC_R1
+title Renderer front-end calls sequence
+
+participant RenderDevice
+participant pureRender
+box "Render"
+    participant Render
+    participant RenderTarget
+    participant BackEnd
+end box
+
+...
+
+== on_idle: Rendering ==
+
+group Frame begin
+    RenderDevice -> Render: GetDeviceState()
+    RenderDevice <-- Render
+    alt NeedReset
+        RenderDevice -> RenderDevice: Reset()
+    else Normal
+        RenderDevice -> Render: Begin()
+        Render -> BackEnd: OnFrameBegin()
+        Render <-- BackEnd
+        RenderDevice <-- Render
+    end
+end
+    ...
+group <seqRender>
+    RenderDevice -> pureRender: OnRender()
+    note over pureRender: Calculate
+    pureRender -> Render: Render()
+    Render -> RenderTarget: Begin()
+    Render <-- RenderTarget
+    note over Render: Menu/Level render
+    Render -> RenderTarget: End()
+    note over RenderTarget: Postprocessing
+    Render <-- RenderTarget
+    pureRender <-- Render
+    RenderDevice <-- pureRender
+end
+    ...
+group Frame end
+    RenderDevice -> Render: End()
+    Render -> BackEnd: OnFrameEnd()
+    Render <-- BackEnd
+    RenderDevice <-- Render
+end
+    ...
+
+@enduml
