@@ -1,5 +1,6 @@
 
-#include "xrRender_VK.h"
+#include "common.h"
+#include "console.h"
 
 /*
  * TODO:
@@ -21,7 +22,7 @@ XR_EXPORT void SetupEnv()
 #ifdef DEBUG
     GEnv.DRender        = nullptr;
 #endif
-    // TODO: console init here
+    InitConsole();
 }
 
 XR_EXPORT pcstr GetModeName()

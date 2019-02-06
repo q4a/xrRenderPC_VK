@@ -169,6 +169,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="device\device.cc" />
+    <ClCompile Include="console.cc" />
+    <ClCompile Include="device\swapchain.cc" />
     <ClCompile Include="xrRender_VK.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -204,7 +207,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="xrRender_VK.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="device\device.h" />
+    <ClInclude Include="console.h" />
+    <ClInclude Include="device\caps.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,12 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="xrRender_VK.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Natvis Include="..\..\TypeHelper.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="xrRender_VK.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="device\device.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="console.h" />
+    <ClInclude Include="device\caps.h">
+      <Filter>device</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="device">
+      <UniqueIdentifier>{f9cecc79-b3c1-401c-be74-c077228a41ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="entrypoint">
+      <UniqueIdentifier>{88b4388e-96e8-4c28-b20c-6dd54044c1dd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="xrRender_VK.cpp">
+      <Filter>entrypoint</Filter>
+    </ClCompile>
+    <ClCompile Include="device\device.cc">
+      <Filter>device</Filter>
+    </ClCompile>
+    <ClCompile Include="console.cc" />
+    <ClCompile Include="device\swapchain.cc">
+      <Filter>device</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
