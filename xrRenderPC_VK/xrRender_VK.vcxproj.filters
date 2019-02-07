@@ -60,6 +60,9 @@
     <ClInclude Include="factory\objects\render.h">
       <Filter>factory\objects</Filter>
     </ClInclude>
+    <ClInclude Include="frontend\render.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="device">
@@ -100,6 +103,9 @@
     </Filter>
     <Filter Include="factory\objects">
       <UniqueIdentifier>{5478bee9-8ce2-425a-903e-fa2f27b240da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="frontend">
+      <UniqueIdentifier>{10879d03-aef4-4a9a-9874-c451bf6bfe32}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="factory\environment\render.cc">
       <Filter>factory\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\render.cc">
+      <Filter>frontend</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
