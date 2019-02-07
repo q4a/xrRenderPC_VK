@@ -1,9 +1,10 @@
 #ifndef FACTORY_ENVIRONMENT_DESC_RENDER_H_
 #define FACTORY_ENVIRONMENT_DESC_RENDER_H_
 
+#include "common.h"
+
 #include "Include/xrRender/EnvironmentRender.h"
 
-#include "common.h"
 
 class fEnvDescriptorRender : public IEnvDescriptorRender
 {

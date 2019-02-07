@@ -1,9 +1,10 @@
 #ifndef FACTORY_CONSOLE_RENDER_H_
 #define FACTORY_CONSOLE_RENDER_H_
 
+#include "common.h"
+
 #include "Include/xrRender/ConsoleRender.h"
 
-#include "common.h"
 
 class fConsoleRender : public IConsoleRender
 {

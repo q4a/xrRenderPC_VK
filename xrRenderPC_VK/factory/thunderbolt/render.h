@@ -1,9 +1,10 @@
 #ifndef FACTORY_THUNDERBOLT_RENDER_H_
 #define FACTORY_THUNDERBOLT_RENDER_H_
 
+#include "common.h"
+
 #include "Include/xrRender/ThunderboltRender.h"
 
-#include "common.h"
 
 class fThunderboltRender : public IThunderboltRender
 {

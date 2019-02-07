@@ -1,4 +1,3 @@
-#include "common.h"
 #include "factory/flare/lens.h"
 
 

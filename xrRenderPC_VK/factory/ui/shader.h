@@ -1,9 +1,10 @@
 #ifndef FACTORY_UI_SHADER_H_
 #define FACTORY_UI_SHADER_H_
 
+#include "common.h"
+
 #include "Include/xrRender/UIShader.h"
 
-#include "common.h"
 
 class fUIShader : public IUIShader
 {

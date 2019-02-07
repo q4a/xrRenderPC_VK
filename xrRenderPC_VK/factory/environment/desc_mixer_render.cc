@@ -1,4 +1,3 @@
-#include "common.h"
 #include "factory/environment/desc_mixer_render.h"
 
 
@@ -40,7 +39,8 @@ fEnvDescriptorMixerRender::Clear()
 void
 fEnvDescriptorMixerRender::lerp
         ( IEnvDescriptorRender *in_a
-        , IEnvDescriptorRender *in_b)
+        , IEnvDescriptorRender *in_b
+        )
 {
     // TBI
 }
