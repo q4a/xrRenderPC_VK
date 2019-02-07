@@ -195,6 +195,7 @@
     <ClCompile Include="factory\ui\shader.cc" />
     <ClCompile Include="factory\wallmark\array.cc" />
     <ClCompile Include="frontend\render.cc" />
+    <ClCompile Include="ui\render.cc" />
     <ClCompile Include="xrRender_VK.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -251,6 +252,7 @@
     <ClInclude Include="factory\ui\shader.h" />
     <ClInclude Include="factory\wallmark\array.h" />
     <ClInclude Include="frontend\render.h" />
+    <ClInclude Include="ui\render.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

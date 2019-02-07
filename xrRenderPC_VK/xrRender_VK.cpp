@@ -3,6 +3,7 @@
 #include "console.h"
 #include "factory/factory.h"
 #include "frontend/render.h"
+#include "ui/render.h"
 
 /*
  * TODO:
@@ -20,7 +21,7 @@ XR_EXPORT void SetupEnv()
     GEnv.Render         = &frontend;
     GEnv.RenderFactory  = &factory;
     GEnv.DU             = nullptr;
-    GEnv.UIRender       = nullptr;
+    GEnv.UIRender       = &uirender;
 #ifdef DEBUG
     GEnv.DRender        = nullptr;
 #endif
