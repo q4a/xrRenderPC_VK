@@ -1,6 +1,7 @@
 
 #include "common.h"
 #include "console.h"
+#include "factory/factory.h"
 
 /*
  * TODO:
@@ -16,7 +17,7 @@ extern "C"
 XR_EXPORT void SetupEnv()
 {
     GEnv.Render         = nullptr;
-    GEnv.RenderFactory  = nullptr;
+    GEnv.RenderFactory  = &factory;
     GEnv.DU             = nullptr;
     GEnv.UIRender       = nullptr;
 #ifdef DEBUG

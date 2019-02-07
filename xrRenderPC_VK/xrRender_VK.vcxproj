@@ -106,6 +106,7 @@
       <PreprocessorDefinitions>_USRDLL;XRRENDER_R1_EXPORTS;USE_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;nvapi.lib;amd_ags_$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -117,6 +118,7 @@
       <AdditionalIncludeDirectories>$(xrExternals)OpenAutomate\inc;$(xrExternals)nvapi;$(xrExternals)AGS_SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USRDLL;XRRENDER_R1_EXPORTS;USE_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;nvapi64.lib;amd_ags_$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -129,6 +131,7 @@
       <PreprocessorDefinitions>_USRDLL;XRRENDER_R1_EXPORTS;USE_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;nvapi.lib;amd_ags_$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -140,6 +143,7 @@
       <AdditionalIncludeDirectories>$(xrExternals)OpenAutomate\inc;$(xrExternals)nvapi;$(xrExternals)AGS_SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USRDLL;XRRENDER_R1_EXPORTS;USE_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;nvapi64.lib;amd_ags_$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -151,6 +155,7 @@
       <AdditionalIncludeDirectories>$(xrExternals)OpenAutomate\inc;$(xrExternals)nvapi;$(xrExternals)AGS_SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USRDLL;XRRENDER_R1_EXPORTS;USE_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;nvapi.lib;amd_ags_$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -162,6 +167,7 @@
       <AdditionalIncludeDirectories>$(xrExternals)OpenAutomate\inc;$(xrExternals)nvapi;$(xrExternals)AGS_SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USRDLL;XRRENDER_R1_EXPORTS;USE_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;nvapi64.lib;amd_ags_$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -172,6 +178,22 @@
     <ClCompile Include="device\device.cc" />
     <ClCompile Include="console.cc" />
     <ClCompile Include="device\swapchain.cc" />
+    <ClCompile Include="factory\console\render.cc" />
+    <ClCompile Include="factory\environment\desc_mixer_render.cc" />
+    <ClCompile Include="factory\environment\desc_render.cc" />
+    <ClCompile Include="factory\environment\render.cc" />
+    <ClCompile Include="factory\factory.cc" />
+    <ClCompile Include="factory\flare\lens.cc" />
+    <ClCompile Include="factory\flare\render.cc" />
+    <ClCompile Include="factory\font\render.cc" />
+    <ClCompile Include="factory\objects\render.cc" />
+    <ClCompile Include="factory\rain\render.cc" />
+    <ClCompile Include="factory\stats\stat_graph_render.cc" />
+    <ClCompile Include="factory\thunderbolt\render.cc" />
+    <ClCompile Include="factory\thunderbolt\desc_render.cc" />
+    <ClCompile Include="factory\ui\sequence_video_item.cc" />
+    <ClCompile Include="factory\ui\shader.cc" />
+    <ClCompile Include="factory\wallmark\array.cc" />
     <ClCompile Include="xrRender_VK.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -211,6 +233,22 @@
     <ClInclude Include="device\device.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="device\caps.h" />
+    <ClInclude Include="factory\console\render.h" />
+    <ClInclude Include="factory\environment\desc_mixer_render.h" />
+    <ClInclude Include="factory\environment\desc_render.h" />
+    <ClInclude Include="factory\environment\render.h" />
+    <ClInclude Include="factory\factory.h" />
+    <ClInclude Include="factory\flare\lens.h" />
+    <ClInclude Include="factory\flare\render.h" />
+    <ClInclude Include="factory\font\render.h" />
+    <ClInclude Include="factory\objects\render.h" />
+    <ClInclude Include="factory\rain\render.h" />
+    <ClInclude Include="factory\stats\stat_graph_render.h" />
+    <ClInclude Include="factory\thunderbolt\render.h" />
+    <ClInclude Include="factory\thunderbolt\desc_render.h" />
+    <ClInclude Include="factory\ui\sequence_video_item.h" />
+    <ClInclude Include="factory\ui\shader.h" />
+    <ClInclude Include="factory\wallmark\array.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
