@@ -42,6 +42,11 @@ std::vector<pcstr> deviceExtensions =
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+/** 
+ * Amount of command buffers dedicated to data transfer
+ */
+constexpr std::size_t ctrl_buffers_num = 1;
+
 /**
  *
  */
@@ -151,7 +156,16 @@ Hw::CreateLogicalDevice()
 void
 Hw::CreateCommandBuffers()
 {
+    const auto cmd_pool_create_info = vk::CommandPoolCreateInfo()
+        .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
+        .setQueueFamilyIndex(graphicsQfamilyIdx); // TODO: separate transfer queue
+    cmd_pool_ = device->createCommandPoolUnique(cmd_pool_create_info);
 
+    const auto cmd_buffer_alloc_info = vk::CommandBufferAllocateInfo()
+        .setCommandBufferCount(ctrl_buffers_num)
+        .setCommandPool(cmd_pool_.get())
+        .setLevel(vk::CommandBufferLevel::ePrimary);
+    ctrl_cmd_buf_ = device->allocateCommandBuffersUnique(cmd_buffer_alloc_info);
 }
 
 
@@ -181,8 +195,25 @@ Hw::CreateDevice
  *
  */
 void
+Hw::DestroyCommandBuffers()
+{
+    for (auto& buffer : ctrl_cmd_buf_)
+    {
+        buffer.reset();
+    }
+
+    cmd_pool_.reset();
+}
+
+
+/**
+ *
+ */
+void
 Hw::DestroyDevice()
 {
+    DestroyCommandBuffers();
+
     DestroySwapchain();
 
     device.reset();

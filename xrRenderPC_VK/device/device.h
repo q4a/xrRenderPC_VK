@@ -29,6 +29,7 @@ class Hw
     vk::ColorSpaceKHR SelectColorSpace() const;
     vk::CompositeAlphaFlagBitsKHR SelectCompositeAlpha() const;
 
+    void DestroyCommandBuffers();
     void DestroySwapchain();
 
 public:
@@ -70,6 +71,9 @@ private:
     vk::UniqueSurfaceKHR wsiSurface_;
 
     HWND hWnd_;
+
+    vk::UniqueCommandPool cmd_pool_;
+    std::vector<vk::UniqueCommandBuffer> ctrl_cmd_buf_; //< device control commands
 };
 
 extern Hw hw;
