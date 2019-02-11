@@ -28,6 +28,6 @@ public:
     void CacheSetCullMode(CullMode mode) override {} // TBI
 };
 
-extern UiRender uirender;
+extern UiRender ui;
 
 #endif // UI_RENDER_H_
