@@ -66,6 +66,9 @@
     <ClInclude Include="ui\render.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="debug\render.h">
+      <Filter>debug</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="device">
@@ -112,6 +115,12 @@
     </Filter>
     <Filter Include="ui">
       <UniqueIdentifier>{f2c62ced-b263-4a78-82aa-5fcabf5abb1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="debug">
+      <UniqueIdentifier>{0f9dcb55-10e6-4380-bd70-129cf14bf01a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="backend">
+      <UniqueIdentifier>{49056692-4476-47d4-9e2f-13ed0b13e4bd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="ui\render.cc">
       <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="debug\render.cc">
+      <Filter>debug</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
