@@ -58,7 +58,7 @@ public:
     std::uint32_t graphicsQfamilyIdx = invalidQindex;
 
     vk::UniqueDevice device;
-    vk::Queue submissionQ;
+    vk::Queue submission_q;
 
     // Swapchain
     vk::SwapchainKHR swapchain = nullptr;

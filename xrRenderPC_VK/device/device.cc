@@ -146,7 +146,7 @@ Hw::CreateLogicalDevice()
 
     device = gpu_.createDeviceUnique(deviceCreateInfo);
 
-    submissionQ = device->getQueue(graphicsQfamilyIdx, 0);
+    submission_q = device->getQueue(graphicsQfamilyIdx, 0);
 }
 
 

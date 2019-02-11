@@ -10,6 +10,12 @@ class FrontEnd
     : public IRender
     , public pureFrame
 {
+    void CreateCommandBuffers();
+    void DestroyCommandBuffers();
+
+    void CreateRenderPass();
+    void DestroyRenderPass();
+
 public:
     FrontEnd() = default;
     ~FrontEnd() = default;
@@ -113,16 +119,17 @@ public:
     void updateGamma() override {} // TBI
 
     // Destroy
-    void OnDeviceDestroy(bool keep_textures) override {} // TBI
-    void ValidateHW() override {} // TBI
-    void DestroyHW() override {} // TBI
+    void OnDeviceDestroy(bool keep_textures) override;
+    void ValidateHW() override {}
+    void Destroy() override;
     void Reset(SDL_Window* hwnd, u32& width, u32& height, float& width_2, float& height_2) override {} // TBI
 
     // Init
     void SetupStates() override {} // TBI
-    void OnDeviceCreate(LPCSTR shader) override {} // TBI
-    void Create(SDL_Window* hwnd, u32& width, u32& height, float& width_2, float& height_2) override {} // TBI
-    void SetupGPU(bool force_sw, bool force_nonpure, bool force_ref) override {} // TBI
+    void OnDeviceCreate(LPCSTR shader) override;
+    void Create(SDL_Window* hwnd, u32& width, u32& height, float& width_2,
+        float& height_2) override;
+    void SetupGPU(bool force_sw, bool force_nonpure, bool force_ref) override;
     
     // Overdraw
     void overdrawBegin() override {} // TBI
@@ -140,18 +147,26 @@ public:
     bool HWSupportsShaderYUV2RGB() override { return false; } // TBI
 
     // Device state
-    DeviceState GetDeviceState() override { return DeviceState::NeedReset; } // TBI
-    bool GetForceGPU_REF() override { return false; } // TBI
+    DeviceState GetDeviceState() override;
+    bool GetForceGPU_REF() override;
     u32 GetCacheStatPolys() override { return 0; } // TBI
-    void Begin() override {} // TBI
+    void Begin() override;
     void Clear() override {} // TBI
-    void End() override {} // TBI
+    void End() override;
     void ClearTarget() override {} // TBI
     void SetCacheXform(Fmatrix& view, Fmatrix& projection) override {} // TBI
     void OnAssetsChanged() override {} // TBI
 
 protected:
     void ScreenshotImpl(ScreenshotMode mode, LPCSTR name, CMemoryWriter* memory_writer) override {} // TBI
+
+private:
+    std::uint32_t current_image_ = 0;
+    vk::Result swapchain_state_ = vk::Result::eSuccess;
+    std::vector<vk::UniqueSemaphore> frame_semaphores_;
+
+    vk::UniqueCommandPool cmd_pool_;
+    std::vector<vk::UniqueCommandBuffer> draw_cmd_buffers_;
 };
 
 extern FrontEnd frontend;
