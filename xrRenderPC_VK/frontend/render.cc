@@ -40,6 +40,15 @@ FrontEnd::GetForceGPU_REF()
 /**
  *
  */
+LPCSTR
+FrontEnd::getShaderPath()
+{
+    return "r3" DELIMITER ""; // we're using R3 shaders
+}
+
+/**
+ *
+ */
 void
 FrontEnd::CreateCommandBuffers()
 {
@@ -81,7 +90,52 @@ FrontEnd::DestroyCommandBuffers()
 void
 FrontEnd::CreateRenderPass()
 {
+    // A dummy render pass with one subpass only
+    // (no PP, deferred and other fancy stuff yet)
 
+    const auto color_attachment_description = vk::AttachmentDescription()
+        .setFormat(hw.caps.colorFormat)
+        .setLoadOp( psDeviceFlags.test(rsClearBB)
+                    ? vk::AttachmentLoadOp::eClear
+                    : vk::AttachmentLoadOp::eDontCare
+                  )
+        .setStoreOp(vk::AttachmentStoreOp::eStore)
+        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+        .setInitialLayout(vk::ImageLayout::eUndefined)
+        .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+
+    const auto color_attachment_reference = vk::AttachmentReference()
+        .setAttachment(0)
+        .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+    const auto subpass = vk::SubpassDescription()
+        .setColorAttachmentCount(1)
+        .setPColorAttachments(&color_attachment_reference)
+        .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+
+    const auto renderpass_create_info = vk::RenderPassCreateInfo()
+        .setAttachmentCount(1)
+        .setPAttachments(&color_attachment_description)
+        .setSubpassCount(1)
+        .setPSubpasses(&subpass);
+
+    renderpass_ = hw.device->createRenderPassUnique(renderpass_create_info);
+
+    // Attach SC images to render pass
+    for (auto& resource : hw.baseRt)
+    {
+        const auto framebuffer_create_info = vk::FramebufferCreateInfo()
+            .setRenderPass(renderpass_.get())
+            .setAttachmentCount(1)
+            .setPAttachments(&resource.imageView)
+            .setWidth(hw.drawRect.width)
+            .setHeight(hw.drawRect.height)
+            .setLayers(1); // not stereo
+
+        resource.frameBuffer =
+            hw.device->createFramebuffer(framebuffer_create_info);
+    }
 }
 
 
@@ -91,7 +145,11 @@ FrontEnd::CreateRenderPass()
 void
 FrontEnd::DestroyRenderPass()
 {
-
+    for (auto& resource : hw.baseRt)
+    {
+        //resource.frameBuffer;
+    }
+    renderpass_.reset();
 }
 
 
@@ -113,14 +171,20 @@ FrontEnd::Create
 
     CreateRenderPass();
 
-    // create frame semaphores
-    const auto semaphore_create_info = vk::SemaphoreCreateInfo();
-
+    // create semaphores
     frame_semaphores_.resize(hw.baseRt.size());
     for (auto& semaphore : frame_semaphores_)
     {
-        semaphore = hw.device->createSemaphoreUnique(semaphore_create_info);
+        semaphore = hw.device->createSemaphoreUnique({});
     }
+
+    render_semaphores_.resize(hw.baseRt.size());
+    for (auto& semaphore : render_semaphores_)
+    {
+        semaphore = hw.device->createSemaphoreUnique({});
+    }
+
+    resources_ = std::make_unique<ResourceManager>();
 }
 
 
@@ -130,6 +194,8 @@ FrontEnd::Create
 void
 FrontEnd::Destroy()
 {
+    resources_.reset();
+
     DestroyRenderPass();
 
     DestroyCommandBuffers();
@@ -146,8 +212,9 @@ FrontEnd::OnDeviceCreate
         ( LPCSTR shader
         )
 {
-    // backend init
-    // RM init
+    // TODO: backend init
+
+    resources_->OnDeviceCreate(shader);
 }
 
 
@@ -166,7 +233,7 @@ FrontEnd::GetDeviceState()
         break;
 
     case vk::Result::eNotReady: // not ready, just wait
-    case vk::Result::eTimeout: // a surface didn't acquired, wait and try again
+    case vk::Result::eTimeout: // a surface wasn't acquired, wait and try again
     case vk::Result::eErrorDeviceLost:
     case vk::Result::eErrorSurfaceLostKHR:
         // TODO: surface lost. What should we do?
@@ -213,6 +280,29 @@ FrontEnd::Begin()
         , nullptr
         , &current_image_
     );
+
+    auto& cmd_buffer = draw_cmd_buffers_[current_image_];
+    auto& swapchain_resource = hw.baseRt[current_image_];
+
+    const auto begin_info = vk::CommandBufferBeginInfo()
+        .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+    
+    cmd_buffer->begin(begin_info);
+
+    // Begin render pass
+    const auto renderpass_begin_info = vk::RenderPassBeginInfo()
+        .setRenderPass(renderpass_.get())
+        .setFramebuffer(swapchain_resource.frameBuffer)
+        .setRenderArea(vk::Rect2D( vk::Offset2D(0, 0)
+                                 , vk::Extent2D( hw.drawRect.width
+                                               , hw.drawRect.height
+        )));
+//        .setClearValueCount(1)
+//        .setPClearValues(&clearValue);
+
+    cmd_buffer->beginRenderPass( renderpass_begin_info
+                               , vk::SubpassContents::eInline
+    );
 }
 
 
@@ -222,7 +312,28 @@ FrontEnd::Begin()
 void
 FrontEnd::End()
 {
+    auto& cmd_buffer = draw_cmd_buffers_[current_image_];
+
+    cmd_buffer->endRenderPass();
+    cmd_buffer->end();
+
+    const vk::PipelineStageFlags wait_mask =
+        vk::PipelineStageFlagBits::eTransfer;
+    const auto submit_info = vk::SubmitInfo()
+        .setWaitSemaphoreCount(1)
+        .setPWaitDstStageMask(&wait_mask)
+        .setPWaitSemaphores(&frame_semaphores_[current_image_].get())
+        .setCommandBufferCount(1)
+        .setPCommandBuffers(&cmd_buffer.get())
+        .setSignalSemaphoreCount(1)
+        .setPSignalSemaphores(&render_semaphores_[current_image_].get());
+
+    hw.submission_q.submit(submit_info, {});
+
+    // Presentation
     const auto present_info = vk::PresentInfoKHR()
+        .setWaitSemaphoreCount(1)
+        .setPWaitSemaphores(&render_semaphores_[current_image_].get())
         .setSwapchainCount(1)
         .setPSwapchains(&hw.swapchain)
         .setPImageIndices(&current_image_);

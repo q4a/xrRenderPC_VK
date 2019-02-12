@@ -1,10 +1,17 @@
 #ifndef FRONTEND_RENDER_H_
 #define FRONTEND_RENDER_H_
 
+#include <memory>
+#include <vector>
+
 #include "common.h"
 
 #include "xrEngine/pure.h"
 #include "xrEngine/Render.h"
+
+#include "frontend/resource_manager.h"
+#include "legacy/Blender.h"
+#include "legacy/Blender_CLSID.h"
 
 class FrontEnd
     : public IRender
@@ -37,12 +44,12 @@ public:
     void level_Unload() override {} // TBI
 
     HRESULT shader_compile(LPCSTR name, IReader* fs, LPCSTR function_name,
-        LPCSTR target, DWORD flags, void *&result) override { return E_FAIL; } // TBI
+        LPCSTR target, DWORD flags, void *&result) override;
 
     // Information
     void DumpStatistics(IGameFont& font, IPerformanceAlert* alert) override {} // TBI
 
-    LPCSTR getShaderPath() override { return "vk"; } // TBI
+    LPCSTR getShaderPath() override;
     
     IRender_Sector* getSector(int id) override { return nullptr; } // TBI
     IRenderVisual* getVisual(int id) override { return nullptr; } // TBI
@@ -67,6 +74,9 @@ public:
     void add_SkeletonWallmark(const Fmatrix* xf, IKinematics* obj,
         IWallMarkArray* array, const Fvector& start, const Fvector& dir,
         float size) override {} // TBI
+
+    IBlender* blender_create(CLASS_ID cls);
+    void blender_destroy(IBlender* &);
 
     IRender_ObjectSpecific* ros_create(IRenderable* parent) override { return nullptr; } // TBI
     void ros_destroy(IRender_ObjectSpecific*&) override {} // TBI
@@ -164,9 +174,15 @@ private:
     std::uint32_t current_image_ = 0;
     vk::Result swapchain_state_ = vk::Result::eSuccess;
     std::vector<vk::UniqueSemaphore> frame_semaphores_;
+    std::vector<vk::UniqueSemaphore> render_semaphores_;
 
     vk::UniqueCommandPool cmd_pool_;
     std::vector<vk::UniqueCommandBuffer> draw_cmd_buffers_;
+
+    vk::UniqueRenderPass renderpass_;
+
+public:
+    std::unique_ptr<ResourceManager> resources_; // accessed by Shader class
 };
 
 extern FrontEnd frontend;
