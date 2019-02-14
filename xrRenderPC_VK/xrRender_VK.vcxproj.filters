@@ -69,6 +69,29 @@
     <ClInclude Include="debug\render.h">
       <Filter>debug</Filter>
     </ClInclude>
+    <ClInclude Include="spirv_reflect.hpp" />
+    <ClInclude Include="backend\backend.h">
+      <Filter>backend</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="resources\manager.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\constant.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\matrix.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\texture_desc.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\blender.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\blender_screen_set.h">
+      <Filter>resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="device">
@@ -121,6 +144,9 @@
     </Filter>
     <Filter Include="backend">
       <UniqueIdentifier>{49056692-4476-47d4-9e2f-13ed0b13e4bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{e72fa121-0988-4f5c-990e-aaf87108c13e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +216,30 @@
     </ClCompile>
     <ClCompile Include="debug\render.cc">
       <Filter>debug</Filter>
+    </ClCompile>
+    <ClCompile Include="backend\backend.cc">
+      <Filter>backend</Filter>
+    </ClCompile>
+    <ClCompile Include="backend\runtime.cc">
+      <Filter>backend</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\manager.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\constant.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\matrix.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\texture_desc.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\blender.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\blender_screen_set.cc">
+      <Filter>resources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
