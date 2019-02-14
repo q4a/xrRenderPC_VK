@@ -3,8 +3,14 @@
 ## Render
 
 - [ ] Remove static linkage of *vulkan-1.lib* and switch to function pointers (this may ruin fancy *vulkan.hpp* usage)
-
 - [ ] Switch from exceptions provided by *vulkan.hpp* to ret codes check
+
+### Front end
+
+#### Resource Manager
+
+- [ ] Remove resource reference counting from `Create*` (shared ptr already do this)
+- [ ] Shader compiler lacks constant reflection (consider `spirv-cross`)
 
 ### Memory allocation
 
@@ -16,7 +22,7 @@
 - [ ] Try structures chain to obtain device driver properties
 - [ ] ``CreateLogicalDevice`` handle a case when graphics and presentation queues came from different families
 - [ ] By now ``CreateSwapchain`` doesn't care of presentation images amount and takes min value. However, it's nice to decide what kind of buffering scheme will be used (and can be supported)
-- [ ] Move ``stats_manager`` into backed. It has no relations with device
+- [ ] Move ``stats_manager`` into backend. It has no relations with device
 - [x] ``CreateSwapchain`` : check for alpha compositing
 
 ## Application
