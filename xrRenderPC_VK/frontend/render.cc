@@ -192,7 +192,7 @@ FrontEnd::Create
  *
  */
 void
-FrontEnd::Destroy()
+FrontEnd::DestroyHW()
 {
     resources_.reset();
 
