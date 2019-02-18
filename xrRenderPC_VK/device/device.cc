@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "common.h"
 #include "device/caps.h"
 #include "device/device.h"
 

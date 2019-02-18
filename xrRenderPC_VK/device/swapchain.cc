@@ -1,4 +1,3 @@
-#include "common.h"
 #include "device/device.h"
 
 
