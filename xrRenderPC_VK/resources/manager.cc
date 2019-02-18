@@ -3,6 +3,7 @@
 #include "Layers/xrRender/blenders/Blender_CLSID.h"
 
 #include "resources/manager.h"
+#include "resources/blender_compiler.h"
 #include "resources/blender_screen_set.h"
 
 
@@ -145,7 +146,6 @@ ResourceManager::GetBlender
         )
 {
     R_ASSERT(name && name[0]);
-
     const auto &iterator = blenders_.find(name);
 
     if (iterator == blenders_.end())
@@ -229,23 +229,25 @@ ResourceManager::OnDeviceCreate
             chunk->r(&desc, sizeof (desc));
 
             auto b = CreateBlender(desc.class_id);
-            if (!b)
+            
+            if (b)
+            {
+                if (b->GetDescription().version != desc.version)
+                {
+                    Msg("! Version conflict in blender '%s'", desc.name);
+                }
+
+                chunk->seek(0);
+                b->Load(*chunk, desc.version);
+
+                auto &iterator =
+                    blenders_.insert(std::make_pair(xr_strdup(desc.name), b));
+                R_ASSERT2(iterator.second, "shader.xr - found duplicate name");
+            }
+            else
             {
                 Msg("! Renderer doesn't support blender '%s'", desc.name);
-                continue;
             }
-
-            if (b->GetDescription().version != desc.version)
-            {
-                Msg("! Version conflict in blender '%s'", desc.name);
-            }
-
-            chunk->seek(0);
-            b->Load(*chunk, desc.version);
-
-            auto &iterator =
-                blenders_.insert(std::make_pair(xr_strdup(desc.name), b));
-            R_ASSERT2(iterator.second, "shader.xr - found duplicate name");
 
             chunk->close();
             chunk_id++;
@@ -287,4 +289,34 @@ ResourceManager::OnDeviceDestroy()
         R_ASSERT(constant.second.unique());
     }
     constants_.clear();
+}
+
+
+/**
+ *
+ */
+std::shared_ptr<Shader>
+ResourceManager::CreateShader
+        ( LPCSTR name
+        , LPCSTR textures
+        , LPCSTR constants
+        , LPCSTR matrices
+        )
+{
+    std::shared_ptr<Shader> shader;
+
+    // TODO: check for LUA shaders
+    auto blender = GetBlender(name);
+    if (!blender)
+    {
+        return shader; // null
+    }
+
+    shader = std::make_shared<Shader>();
+
+    BlenderCompiler compiler;
+    compiler.blender = blender;
+
+    shaders_.push_back(shader);
+    return shader;
 }
