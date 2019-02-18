@@ -205,10 +205,13 @@
     <ClCompile Include="factory\wallmark\array.cc" />
     <ClCompile Include="frontend\render.cc" />
     <ClCompile Include="resources\blender.cc" />
+    <ClCompile Include="resources\blender_compiler.cc" />
     <ClCompile Include="resources\blender_screen_set.cc" />
     <ClCompile Include="resources\constant.cc" />
+    <ClCompile Include="resources\element.cc" />
     <ClCompile Include="resources\manager.cc" />
     <ClCompile Include="resources\matrix.cc" />
+    <ClCompile Include="resources\shader.cc" />
     <ClCompile Include="resources\texture_desc.cc" />
     <ClCompile Include="ui\render.cc" />
     <ClCompile Include="xrRender_VK.cpp" />
@@ -270,10 +273,13 @@
     <ClInclude Include="factory\wallmark\array.h" />
     <ClInclude Include="frontend\render.h" />
     <ClInclude Include="resources\blender.h" />
+    <ClInclude Include="resources\blender_compiler.h" />
     <ClInclude Include="resources\blender_screen_set.h" />
     <ClInclude Include="resources\constant.h" />
+    <ClInclude Include="resources\element.h" />
     <ClInclude Include="resources\manager.h" />
     <ClInclude Include="resources\matrix.h" />
+    <ClInclude Include="resources\shader.h" />
     <ClInclude Include="resources\texture_desc.h" />
     <ClInclude Include="spirv_reflect.hpp" />
     <ClInclude Include="stdafx.h" />
