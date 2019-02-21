@@ -1,8 +1,6 @@
 #ifndef UI_RENDER_H_
 #define UI_RENDER_H_
 
-#include "common.h"
-
 #include "Include/xrRender/UIRender.h"
 
 class UiRender
