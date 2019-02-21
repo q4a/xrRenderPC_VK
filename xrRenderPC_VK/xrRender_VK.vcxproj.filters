@@ -92,6 +92,15 @@
     <ClInclude Include="resources\blender_screen_set.h">
       <Filter>resources</Filter>
     </ClInclude>
+    <ClInclude Include="resources\shader.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\blender_compiler.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\element.h">
+      <Filter>resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="device">
@@ -239,6 +248,15 @@
       <Filter>resources</Filter>
     </ClCompile>
     <ClCompile Include="resources\blender_screen_set.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\shader.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\blender_compiler.cc">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\element.cc">
       <Filter>resources</Filter>
     </ClCompile>
   </ItemGroup>

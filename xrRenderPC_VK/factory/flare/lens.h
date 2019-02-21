@@ -1,8 +1,6 @@
 #ifndef FACTORY_FLARE_LENS_H_
 #define FACTORY_FLARE_LENS_H_
 
-#include "common.h"
-
 #include "Include/xrRender/LensFlareRender.h"
 
 

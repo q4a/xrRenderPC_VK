@@ -5,6 +5,7 @@
 
 #include "xrEngine/Properties.h"
 
+class BlenderCompiler;
 
 class BlenderDescription
 {
@@ -27,6 +28,7 @@ public:
     BlenderDescription &GetDescription();
     void Load(IReader &rstream, u16 version) override;
     void Save(IWriter &wstream) override;
+    virtual void Compile(BlenderCompiler &compiler);
 
     LPCSTR getName() override;
     LPCSTR getComment() = 0;

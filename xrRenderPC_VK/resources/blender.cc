@@ -1,3 +1,5 @@
+#include "resources/blender_compiler.h"
+
 #include "resources/blender.h"
 
 
@@ -47,6 +49,18 @@ Blender::Load
 void
 Blender::Save
         ( IWriter &wstream
+        )
+{
+    // TBI
+}
+
+
+/**
+ *
+ */
+void
+Blender::Compile
+        ( BlenderCompiler &compiler
         )
 {
     // TBI

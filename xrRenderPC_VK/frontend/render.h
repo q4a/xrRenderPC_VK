@@ -4,14 +4,10 @@
 #include <memory>
 #include <vector>
 
-#include "common.h"
-
 #include "xrEngine/pure.h"
 #include "xrEngine/Render.h"
 
-#include "frontend/resource_manager.h"
-#include "legacy/Blender.h"
-#include "legacy/Blender_CLSID.h"
+#include "resources/manager.h"
 
 class FrontEnd
     : public IRender
@@ -44,7 +40,7 @@ public:
     void level_Unload() override {} // TBI
 
     HRESULT shader_compile(LPCSTR name, IReader* fs, LPCSTR function_name,
-        LPCSTR target, DWORD flags, void *&result) override;
+        LPCSTR target, DWORD flags, void *&result) override { return E_FAIL; } // TBI
 
     // Information
     void DumpStatistics(IGameFont& font, IPerformanceAlert* alert) override {} // TBI
@@ -75,8 +71,8 @@ public:
         IWallMarkArray* array, const Fvector& start, const Fvector& dir,
         float size) override {} // TBI
 
-    IBlender* blender_create(CLASS_ID cls);
-    void blender_destroy(IBlender* &);
+    Blender* blender_create(CLASS_ID cls);
+    void blender_destroy(Blender* &);
 
     IRender_ObjectSpecific* ros_create(IRenderable* parent) override { return nullptr; } // TBI
     void ros_destroy(IRender_ObjectSpecific*&) override {} // TBI
@@ -131,7 +127,7 @@ public:
     // Destroy
     void OnDeviceDestroy(bool keep_textures) override;
     void ValidateHW() override {}
-    void Destroy() override;
+    void DestroyHW() override;
     void Reset(SDL_Window* hwnd, u32& width, u32& height, float& width_2, float& height_2) override {} // TBI
 
     // Init

@@ -1,8 +1,6 @@
 #ifndef FACTORY_RAIN_RENDER_H_
 #define FACTORY_RAIN_RENDER_H_
 
-#include "common.h"
-
 #include "Include/xrRender/RainRender.h"
 
 

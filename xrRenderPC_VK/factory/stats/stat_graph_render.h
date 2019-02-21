@@ -1,8 +1,6 @@
 #ifndef FACTORY_STATS_STAT_GRAPH_RENDER_H_
 #define FACTORY_STATS_STAT_GRAPH_RENDER_H_
 
-#include "common.h"
-
 #include "Include/xrRender/StatGraphRender.h"
 
 
