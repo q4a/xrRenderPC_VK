@@ -1,3 +1,4 @@
+#include <functional>
 #include <string>
 
 #include "Layers/xrRender/blenders/Blender_CLSID.h"
@@ -142,10 +143,10 @@ ResourceManager::CreateBlender
  */
 std::shared_ptr<Blender>
 ResourceManager::GetBlender
-        ( LPCSTR name
+        ( const std::string &name
         )
 {
-    R_ASSERT(name && name[0]);
+    R_ASSERT(name.size());
     const auto &iterator = blenders_.find(name);
 
     if (iterator == blenders_.end())
@@ -171,12 +172,12 @@ enum ShaderBaseChunkType
  */
 void
 ResourceManager::OnDeviceCreate
-        ( LPCSTR file_name
+        ( const std::string &file_name
         )
 {
     const std::string signature { "shENGINE" };
     string32 id;
-    IReader *rstream = FS.r_open(file_name);
+    IReader *rstream = FS.r_open(file_name.c_str());
     
     R_ASSERT2(rstream, file_name);
     
@@ -240,8 +241,8 @@ ResourceManager::OnDeviceCreate
                 chunk->seek(0);
                 b->Load(*chunk, desc.version);
 
-                auto &iterator =
-                    blenders_.insert(std::make_pair(xr_strdup(desc.name), b));
+                std::string name{ desc.name };
+                auto &iterator = blenders_.insert(std::make_pair(name, b));
                 R_ASSERT2(iterator.second, "shader.xr - found duplicate name");
             }
             else
@@ -292,21 +293,103 @@ ResourceManager::OnDeviceDestroy()
 }
 
 
+const std::vector<std::string> texture_extensions =
+{
+    "tga",
+    "dds",
+    "bmp",
+    "ogm"
+};
+
+
+/**
+ *
+ */
+void
+ResourceManager::ParseList
+        ( const std::string &list
+        , std::vector<std::string> &strings
+        )
+{
+    strings.clear();
+
+    if (list.size() == 0)
+    {
+        strings.push_back("$null");
+        return;
+    }
+
+    // Split string
+    std::function<void ( const std::string&
+                       , std::vector<std::string>&
+                       , const char
+    )> split_with;
+
+    split_with =
+        [&]( const std::string &list
+           , std::vector<std::string> &strings
+           , const char delimiter
+           )
+    {
+        if (list.size() == 0)
+        {
+            return;
+        }
+
+        auto &iterator = std::find(list.cbegin(), list.cend(), delimiter);
+        strings.push_back({ list.cbegin(), iterator });
+
+        if (iterator != list.cend())
+        {
+            split_with({ ++iterator, list.cend() }, strings, delimiter);
+        }
+    };
+
+    split_with(list, strings, ',');
+
+    // Remove extensions
+    auto remove_extension = [](const std::string &file_name) -> std::string
+    {
+        for (const auto &extension : texture_extensions)
+        {
+            auto &iterator = std::find_end( file_name.cbegin()
+                                          , file_name.cend()
+                                          , extension.cbegin()
+                                          , extension.cend()
+            );
+
+            if (iterator != file_name.cend())
+            {
+                return { file_name.cbegin(), --iterator };
+            }
+        }
+
+        return file_name;
+    };
+
+    std::transform( strings.cbegin()
+                  , strings.cend()
+                  , strings.begin()
+                  , remove_extension
+    );
+}
+
+
 /**
  *
  */
 std::shared_ptr<Shader>
 ResourceManager::CreateShader
-        ( LPCSTR name
-        , LPCSTR textures
-        , LPCSTR constants
-        , LPCSTR matrices
+        ( const std::string &shader_name
+        , const std::string &textures
+        , const std::string &constants
+        , const std::string &matrices
         )
 {
     std::shared_ptr<Shader> shader;
 
     // TODO: check for LUA shaders
-    auto blender = GetBlender(name);
+    auto blender = GetBlender(shader_name);
     if (!blender)
     {
         return shader; // null
@@ -314,9 +397,26 @@ ResourceManager::CreateShader
 
     shader = std::make_shared<Shader>();
 
+    // Initialize compiler
     BlenderCompiler compiler;
-    compiler.blender = blender;
+    ParseList(textures,  compiler.textures);
+    ParseList(constants, compiler.constants);
+    ParseList(matrices,  compiler.matrices);
 
+    compiler.blender = blender;
+    compiler.detail  = false; // TODO
+
+    // Compile
+
+    // LOD0 - HQ
+    auto element = Element{};
+    compiler.Compile(element);
+    shader->elements[0] = std::make_shared<Element>(element);
+    elements_.push_back(shader->elements[0]);
+
+    // TODO: other passes
+
+    // TODO: check for unique
     shaders_.push_back(shader);
     return shader;
 }
