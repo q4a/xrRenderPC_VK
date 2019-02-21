@@ -93,3 +93,45 @@ ScreenSet::Save
 {
     // TBI
 }
+
+
+/**
+ *
+ */
+void
+ScreenSet::Compile
+        ( BlenderCompiler &compiler
+        )
+{
+    Blender::Compile(compiler);
+
+    switch (blend_.IDselected)
+    {
+    case 1:
+        compiler.PassBegin("stub_notransform_t", "stub_default");
+        break;
+    default:
+        break;
+    };
+
+    compiler.PassTexture("s_base", compiler.textures[0]);
+    compiler.PassSampler("smp_base");
+    compiler.PassZtest(ztest_.value, zwrite_.value);
+
+    switch (blend_.IDselected)
+    {
+    case 1: // BLEND
+        compiler.PassBlend( true
+                          , 0/*D3DBLEND_SRCALPHA*/
+                          , 1/*D3DBLEND_INVSRCALPHA*/
+                          , true
+                          , aref_.value
+        );
+        break;
+    default:
+        break;
+    }
+
+    compiler.PassLightingFog(lighting_.value, fog_.value);
+    compiler.PassEnd();
+}

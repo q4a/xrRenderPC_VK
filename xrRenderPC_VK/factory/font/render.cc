@@ -1,5 +1,6 @@
 #include "factory/font/render.h"
 
+#include "frontend/render.h"
 
 /**
  *
@@ -10,7 +11,7 @@ fFontRender::Initialize
         , LPCSTR texture
         )
 {
-    // TBI
+    frontend.resources_->CreateShader(shader, texture, "", "");
 }
 
 
@@ -19,7 +20,7 @@ fFontRender::Initialize
  */
 void
 fFontRender::OnRender
-        ( CGameFont& owner
+        ( CGameFont &owner
         )
 {
     // TBI

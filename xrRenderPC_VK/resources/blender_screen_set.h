@@ -1,7 +1,8 @@
 #ifndef RESOURCES_BLENDER_SCREEN_SET_H_
 #define RESOURCES_BLENDER_SCREEN_SET_H_
 
-#include "blender.h"
+#include "resources/blender.h"
+#include "resources/blender_compiler.h"
 
 namespace blenders
 {
@@ -15,6 +16,7 @@ public:
 
     void Load(IReader &rstream, u16 version) final;
     void Save(IWriter &wstream) final;
+    void Compile(BlenderCompiler &compiler) final;
 
     LPCSTR getName() final;
     LPCSTR getComment() final;

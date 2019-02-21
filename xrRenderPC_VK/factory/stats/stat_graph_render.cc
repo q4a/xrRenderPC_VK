@@ -1,4 +1,3 @@
-#include "common.h"
 #include "factory/stats/stat_graph_render.h"
 
 
