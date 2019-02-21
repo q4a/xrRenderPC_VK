@@ -6,9 +6,7 @@
 
 #include <SDL.h>
 #include <SDL_syswm.h>
-#include <vk_mem_alloc.h>
 
-#include "common.h"
 #include "caps.h"
 
 constexpr std::uint32_t invalidQindex = std::numeric_limits<std::uint32_t>::max();

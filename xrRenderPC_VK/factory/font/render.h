@@ -1,8 +1,6 @@
 #ifndef FACTORY_FONT_RENDER_H_
 #define FACTORY_FONT_RENDER_H_
 
-#include "common.h"
-
 #include "Include/xrRender/FontRender.h"
 
 

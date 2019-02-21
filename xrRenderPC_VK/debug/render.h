@@ -1,8 +1,6 @@
 #ifndef DEBUG_RENDER_H_
 #define DEBUG_RENDER_H_
 
-#include "common.h"
-
 #include "Include/xrRender/DebugRender.h"
 
 class DebugRender

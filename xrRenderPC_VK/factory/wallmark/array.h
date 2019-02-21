@@ -3,7 +3,6 @@
 
 #include "Include/xrRender/WallMarkArray.h"
 
-#include "common.h"
 
 class fWallMarkArray : public IWallMarkArray
 {

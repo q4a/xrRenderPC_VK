@@ -1,8 +1,6 @@
 #ifndef FACTORY_THUNDERBOLT_DESC_RENDER_H_
 #define FACTORY_THUNDERBOLT_DESC_RENDER_H_
 
-#include "common.h"
-
 #include "Include/xrRender/ThunderboltDescRender.h"
 
 
