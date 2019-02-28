@@ -5,6 +5,13 @@
 
 #include <vk_mem_alloc.h>
 
+enum class BufferType
+{
+    Vertex,
+    Index,
+    Image
+};
+
 class DeviceBuffer
 {
     const VmaAllocator *allocator_ref_;

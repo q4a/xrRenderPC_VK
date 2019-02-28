@@ -17,6 +17,8 @@ class Hw
     : public pureAppActivate
     , public pureAppDeactivate
 {
+    friend class StreamBuffer;
+
     void CreateInstance();
     void SelectGpu();
     void CreateSurface(SDL_Window * const sdlWnd);
@@ -36,7 +38,9 @@ class Hw
 
     // Memory management
     buffer_ptr CreateCpuBuffer(std::size_t size) const;
-    buffer_ptr CreateGpuBuffer(std::size_t size) const;
+    buffer_ptr CreateGpuBuffer( std::size_t size
+                              , BufferType type
+                              ) const;
     void Transfer( buffer_ptr &dst
                  , buffer_ptr &src
                  , std::size_t offset

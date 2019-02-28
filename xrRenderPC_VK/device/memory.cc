@@ -64,6 +64,7 @@ Hw::CreateCpuBuffer
 buffer_ptr
 Hw::CreateGpuBuffer
         ( std::size_t size
+        , BufferType type
         ) const
 {
     buffer_ptr buffer =
@@ -72,8 +73,20 @@ Hw::CreateGpuBuffer
     VkBufferCreateInfo buffer_create_info{};
     buffer_create_info.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buffer_create_info.size        = size;
-    buffer_create_info.usage       = VK_BUFFER_USAGE_TRANSFER_DST_BIT
-                                   | VK_BUFFER_USAGE_INDEX_BUFFER_BIT; // FIXME
+    buffer_create_info.usage       = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+    switch (type)
+    {
+    case BufferType::Vertex:
+        buffer_create_info.usage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        break;
+    case BufferType::Index:
+        buffer_create_info.usage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        break;
+    default:
+        R_ASSERT(0);
+    }
+
     buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     VmaAllocationCreateInfo alloc_create_info{};
