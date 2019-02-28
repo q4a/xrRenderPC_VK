@@ -1,7 +1,7 @@
-#include "frontend/render.h"
-
 #include "device/device.h"
+#include "backend/backend.h"
 
+#include "frontend/render.h"
 
 FrontEnd frontend;
 
@@ -212,7 +212,7 @@ FrontEnd::OnDeviceCreate
         ( LPCSTR shader
         )
 {
-    // TODO: backend init
+    backend.OnDeviceCreate();
 
     resources_->OnDeviceCreate(shader);
 }
@@ -263,7 +263,7 @@ FrontEnd::OnDeviceDestroy
         ( bool keep_textures
         )
 {
-    // backend destruction
+    backend.OnDeviceDestroy();
 }
 
 
