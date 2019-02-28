@@ -1,0 +1,23 @@
+#ifndef DEVICE_MEMORY_H_
+#define DEVICE_MEMORY_H_
+
+#include <memory>
+
+#include <vk_mem_alloc.h>
+
+class DeviceBuffer
+{
+    const VmaAllocator *allocator_ref_;
+
+public:
+    explicit DeviceBuffer(const VmaAllocator *allocator);
+    ~DeviceBuffer();
+
+    VkBuffer            buffer;
+    VmaAllocation       allocation;
+    VmaAllocationInfo   allocation_info;
+};
+
+using buffer_ptr = std::unique_ptr<DeviceBuffer>;
+
+#endif // DEVICE_MEMORY_H_

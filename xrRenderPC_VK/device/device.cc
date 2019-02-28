@@ -172,6 +172,19 @@ Hw::CreateCommandBuffers()
  *
  */
 void
+Hw::CreateMemoryAllocator()
+{
+    VmaAllocatorCreateInfo allocator_create_info{};
+    allocator_create_info.physicalDevice = (VkPhysicalDevice)gpu_;
+    allocator_create_info.device = (VkDevice)device.get();
+    vmaCreateAllocator(&allocator_create_info, &allocator_);
+}
+
+
+/**
+ *
+ */
+void
 Hw::CreateDevice
         ( SDL_Window * const sdlWnd
         )
@@ -187,6 +200,18 @@ Hw::CreateDevice
     CreateSwapchain();
 
     CreateCommandBuffers();
+
+    CreateMemoryAllocator();
+}
+
+
+/**
+ *
+ */
+void
+Hw::DestroyMemoryAllocator()
+{
+    vmaDestroyAllocator(allocator_);
 }
 
 
@@ -211,6 +236,8 @@ Hw::DestroyCommandBuffers()
 void
 Hw::DestroyDevice()
 {
+    DestroyMemoryAllocator();
+
     DestroyCommandBuffers();
 
     DestroySwapchain();

@@ -6,8 +6,10 @@
 
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include <vk_mem_alloc.h>
 
-#include "caps.h"
+#include "device/caps.h"
+#include "device/memory.h"
 
 constexpr std::uint32_t invalidQindex = std::numeric_limits<std::uint32_t>::max();
 
@@ -21,14 +23,25 @@ class Hw
     void CreateLogicalDevice();
     void CreateSwapchain();
     void CreateCommandBuffers();
+    void CreateMemoryAllocator();
 
     vk::PresentModeKHR SelectPresentMode() const;
     vk::Format SelectColorFormat() const;
     vk::ColorSpaceKHR SelectColorSpace() const;
     vk::CompositeAlphaFlagBitsKHR SelectCompositeAlpha() const;
 
+    void DestroyMemoryAllocator();
     void DestroyCommandBuffers();
     void DestroySwapchain();
+
+    // Memory management
+    buffer_ptr CreateCpuBuffer(std::size_t size) const;
+    buffer_ptr CreateGpuBuffer(std::size_t size) const;
+    void Transfer( buffer_ptr &dst
+                 , buffer_ptr &src
+                 , std::size_t offset
+                 , std::size_t size
+                 ) const;
 
 public:
     struct SwapchainResource
@@ -71,6 +84,7 @@ private:
     HWND hWnd_;
 
     vk::UniqueCommandPool cmd_pool_;
+    VmaAllocator allocator_;
     std::vector<vk::UniqueCommandBuffer> ctrl_cmd_buf_; //< device control commands
 };
 
