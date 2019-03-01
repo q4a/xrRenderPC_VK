@@ -11,9 +11,19 @@ StreamBuffer::StreamBuffer
         , BufferType type
         )
     : size_(size)
+    , type_(type)
 {
-    cpu_buffer_ = hw.CreateCpuBuffer(size);
-    gpu_buffer_ = hw.CreateGpuBuffer(size, type);
+}
+
+
+/**
+ *
+ */
+void
+StreamBuffer::Create()
+{
+    cpu_buffer_ = hw.CreateCpuBuffer(size_);
+    gpu_buffer_ = hw.CreateGpuBuffer(size_, type_);
 }
 
 
@@ -26,6 +36,10 @@ StreamBuffer::Sync()
     R_ASSERT(offset_ + position_ <= size_);
 
     const auto transfer_size = size_ - offset_ + position_;
+    if (transfer_size == 0)
+    {
+        return;
+    }
 
     hw.Transfer( gpu_buffer_
                , cpu_buffer_

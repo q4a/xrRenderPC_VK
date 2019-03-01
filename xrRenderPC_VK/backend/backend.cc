@@ -43,8 +43,8 @@ BackEnd::OnDeviceCreate()
 {
     CreateIndexCache();
 
-    vertex_stream_ << StreamControl::Reset;
-    index_stream_  << StreamControl::Reset;
+    vertex_stream_.Create();
+    index_stream_.Create();
 }
 
 
@@ -64,7 +64,7 @@ BackEnd::OnDeviceDestroy()
 void
 BackEnd::CreateIndexCache()
 {
-    index_cache_ << StreamControl::Reset;
+    index_cache_.Create();
 
     for ( auto triangle_idx = 0
         ; triangle_idx < triangles_num

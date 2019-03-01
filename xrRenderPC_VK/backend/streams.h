@@ -52,9 +52,11 @@ public:
     explicit StreamBuffer( std::size_t size
                          , BufferType type
                          );
+    void Create();
     void Sync();
 
 private:
+    BufferType type_;
     buffer_ptr gpu_buffer_;
 protected:
     buffer_ptr cpu_buffer_;
