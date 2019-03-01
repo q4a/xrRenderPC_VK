@@ -12,9 +12,14 @@
 - [ ] Remove resource reference counting from `Create*` (shared ptr already do this)
 - [ ] Shader compiler lacks constant reflection (consider `spirv-cross`)
 
+### Back end
+
+- [ ] Add statistics for buffers utilization (see ``stats_manager``)
+
 ### Memory allocation
 
-- [ ] Adopt VMA to do this dirty job. But first need to find all possible use cases to adjust optimal allocation policy
+- [x] Adopt VMA to do this dirty job. But first need to find all possible use cases to adjust optimal allocation policy
+- [ ] Make VMA C++ friendly (hpp wrapper)
 
 ### Device
 
@@ -28,6 +33,7 @@
 ## Application
 
 - [ ] Engine and application name strings should be defined project wide
+- [ ] Consider dynamic renders enumerator
 - [ ] Need to unload unused renders
 
 ## Issues
