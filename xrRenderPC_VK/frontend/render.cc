@@ -303,6 +303,8 @@ FrontEnd::Begin()
     cmd_buffer->beginRenderPass( renderpass_begin_info
                                , vk::SubpassContents::eInline
     );
+
+    backend.OnFrameBegin();
 }
 
 
@@ -312,6 +314,8 @@ FrontEnd::Begin()
 void
 FrontEnd::End()
 {
+    backend.OnFrameEnd();
+
     auto& cmd_buffer = draw_cmd_buffers_[current_image_];
 
     cmd_buffer->endRenderPass();
