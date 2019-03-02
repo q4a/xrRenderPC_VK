@@ -111,6 +111,11 @@ public:
         }
         return *this;
     }
+    DataStream &operator >>(std::size_t &value)
+    {
+        value = offset_ + position_;
+        return *this;
+    }
 };
 
 
