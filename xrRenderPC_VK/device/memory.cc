@@ -28,12 +28,12 @@ DeviceBuffer::~DeviceBuffer()
 /**
  *
  */
-buffer_ptr
+BufferPtr
 Hw::CreateCpuBuffer
         ( std::size_t size
         ) const
 {
-    buffer_ptr buffer =
+    BufferPtr buffer =
         std::unique_ptr<DeviceBuffer>(new DeviceBuffer{ &allocator_ });
 
     VkBufferCreateInfo buffer_create_info{};
@@ -61,13 +61,13 @@ Hw::CreateCpuBuffer
 /**
  *
  */
-buffer_ptr
+BufferPtr
 Hw::CreateGpuBuffer
         ( std::size_t size
         , BufferType type
         ) const
 {
-    buffer_ptr buffer =
+    BufferPtr buffer =
         std::unique_ptr<DeviceBuffer>(new DeviceBuffer{ &allocator_ });
 
     VkBufferCreateInfo buffer_create_info{};
@@ -109,8 +109,8 @@ Hw::CreateGpuBuffer
  */
 void
 Hw::Transfer
-        ( buffer_ptr &dst
-        , buffer_ptr &src
+        ( BufferPtr &dst
+        , BufferPtr &src
         , std::size_t offset
         , std::size_t size
         ) const

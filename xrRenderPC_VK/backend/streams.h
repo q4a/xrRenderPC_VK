@@ -56,10 +56,10 @@ public:
     void Sync();
 
 private:
-    BufferType type_;
-    buffer_ptr gpu_buffer_;
+    BufferType  type_;
+    BufferPtr   gpu_buffer_;
 protected:
-    buffer_ptr cpu_buffer_;
+    BufferPtr   cpu_buffer_;
 
     std::size_t size_     = 0;
     std::size_t offset_   = 0;

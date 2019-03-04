@@ -37,12 +37,12 @@ class Hw
     void DestroySwapchain();
 
     // Memory management
-    buffer_ptr CreateCpuBuffer(std::size_t size) const;
-    buffer_ptr CreateGpuBuffer( std::size_t size
-                              , BufferType type
-                              ) const;
-    void Transfer( buffer_ptr &dst
-                 , buffer_ptr &src
+    BufferPtr CreateCpuBuffer( std::size_t size ) const;
+    BufferPtr CreateGpuBuffer( std::size_t size
+                             , BufferType type
+                             ) const;
+    void Transfer( BufferPtr &dst
+                 , BufferPtr &src
                  , std::size_t offset
                  , std::size_t size
                  ) const;

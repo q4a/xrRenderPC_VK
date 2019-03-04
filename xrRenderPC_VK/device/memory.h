@@ -25,6 +25,6 @@ public:
     VmaAllocationInfo   allocation_info;
 };
 
-using buffer_ptr = std::unique_ptr<DeviceBuffer>;
+using BufferPtr = std::unique_ptr<DeviceBuffer>;
 
 #endif // DEVICE_MEMORY_H_
