@@ -83,7 +83,7 @@ ResourceManager::CreatePipelineShader
     }
 
     // Create a shader object
-    auto shader = std::make_shared<PipelineShader>();
+    auto shader = std::make_shared<T>();
 
     shader->dwFlags |= xr_resource_flagged::RF_REGISTERED;
     shader->set_name(shader_name.c_str());
@@ -95,7 +95,7 @@ ResourceManager::CreatePipelineShader
     shader->stage       = ShaderTypeTraits<T>::stage;
 
     bool result = CompileShader( shader_name
-                               , shader
+                               , shader.get()
     );
     R_ASSERT(result);
 

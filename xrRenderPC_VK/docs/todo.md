@@ -11,6 +11,7 @@
 
 - [ ] Remove resource reference counting from `Create*` (shared ptr already do this)
 - [ ] Shader compiler lacks constant reflection (consider `spirv-cross`)
+- [ ] Blender compiler uses TL as default pipeline topology
 
 ### Back end
 
