@@ -36,6 +36,7 @@
 - [ ] Engine and application name strings should be defined project wide
 - [ ] Consider dynamic renders enumerator
 - [ ] Need to unload unused renders
+- [ ] `CGameFont` has `dxFontRender` in friends. Need to enlarge friend zone or find a smarter way to access protected members
 
 ## Issues
 
