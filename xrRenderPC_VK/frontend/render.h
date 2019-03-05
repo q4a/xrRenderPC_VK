@@ -180,9 +180,10 @@ private:
 public:
     struct RenderOptions
     {
-        bool shader__dump_source;
-        bool shader__disassemble;
-    };
+        int  shadow_map_size            = 2048u; // TODO: take it from console setting
+        bool shader__dump_source        = true;
+        bool shader__disassemble        = false;
+    } o;
     std::unique_ptr<ResourceManager> resources_; // accessed by Shader class
 };
 
