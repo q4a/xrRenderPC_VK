@@ -178,6 +178,11 @@ private:
     vk::UniqueRenderPass renderpass_;
 
 public:
+    struct RenderOptions
+    {
+        bool shader__dump_source;
+        bool shader__disassemble;
+    };
     std::unique_ptr<ResourceManager> resources_; // accessed by Shader class
 };
 
