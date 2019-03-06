@@ -51,7 +51,7 @@ ResourceManager::CreateShaderElement
                                        , is_equal
     );
 
-    if (iterator == elements_.cend())
+    if (iterator != elements_.cend())
     {
         return *iterator;
     }

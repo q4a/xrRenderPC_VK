@@ -34,7 +34,7 @@ ResourceManager::CreateShaderPass
                                        , is_equal
     );
 
-    if (iterator == shader_passes_.cend())
+    if (iterator != shader_passes_.cend())
     {
         return *iterator;
     }
