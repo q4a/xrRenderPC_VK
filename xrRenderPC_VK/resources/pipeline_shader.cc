@@ -323,7 +323,8 @@ ResourceManager::CompileShader
         R_ASSERT(rcache);
 
         auto &spirv = shader->spirv;
-        spirv.resize(rcache->length());
+        const auto instructions_num = rcache->length() / sizeof(std::uint32_t);
+        spirv.resize(instructions_num);
         CopyMemory( spirv.data()
                   , rcache->pointer()
                   , rcache->length()
@@ -383,8 +384,17 @@ ResourceManager::CompileShader
         IWriter *wcache = FS.w_open(cache_absolute_path);
         R_ASSERT2(wcache, "Unable to create cache");
 
+        /* TODO: To put the CRC. I don't think that following
+         *       original code's approach is good: sometimes
+         *       it's convinient to work with SPIR-V blobs
+         *       using various 3rd party software. In this
+         *       case the CRC in the header will broke such
+         *       compatibility
+         */
+
         const auto &spirv = shader->spirv;
-        wcache->w(spirv.data(), spirv.size());
+        const auto size_in_bytes = spirv.size() * sizeof(spirv[0]);
+        wcache->w(spirv.data(), size_in_bytes);
         FS.w_close(wcache);
     }
 
@@ -413,9 +423,11 @@ ResourceManager::CompileShader
 
     /* Create a Vulkan shader object
      */
+    const auto &spirv = shader->spirv;
+    const auto size_in_bytes = spirv.size() * sizeof(spirv[0]);
     const auto module_create_info = vk::ShaderModuleCreateInfo()
-        .setPCode(shader->spirv.data())
-        .setCodeSize(shader->spirv.size() * sizeof(std::uint32_t));
+        .setPCode(spirv.data())
+        .setCodeSize(size_in_bytes);
     shader->module = hw.device->createShaderModuleUnique(module_create_info);
 
     return true;
