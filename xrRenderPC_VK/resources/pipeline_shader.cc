@@ -16,6 +16,44 @@
 #include "resources/pipeline_shader.h"
 
 
+/*!
+ * \brief   Creates Vulkan shader module from assigned SPIR-V IR.
+ *
+ * This module will be attached to the graphics pipeline at
+ * the end of blender compiler pass.
+ */
+void
+PipelineShader::CreateModule()
+{
+    R_ASSERT2(spirv.size(), "Can't create from empty SPIR-V data");
+
+    const auto size_in_bytes = spirv.size() * sizeof(spirv[0]);
+    const auto module_create_info =vk::ShaderModuleCreateInfo()
+        .setPCode(spirv.data())
+        .setCodeSize(size_in_bytes);
+    module = hw.device->createShaderModuleUnique(module_create_info);
+}
+
+
+/*!
+ * \brief   Parse shader resources and create module's constant table.
+ *
+ * The function uses `spirv-cross` compiler for SPIR-V shader reflection.
+ * Then iterates over resources to create a constant table, sampler or
+ * vertex format representation.
+ */
+void
+PipelineShader::ParseResources()
+{
+    spirv_cross::Parser parser{ spirv.data(), spirv.size() };
+    parser.parse();
+
+    spirv_cross::CompilerHLSL compiler(std::move(parser.get_parsed_ir()));
+
+    const auto &resources = compiler.get_shader_resources();
+}
+
+
 /**
  *
  */
@@ -405,30 +443,9 @@ ResourceManager::CompileShader
         // TBI
     }
 
-    /* Introspect the shader and build constant tables
-     *
-     * TODO: of course in a separate function!
-     */
-    {
-        std::vector<std::uint32_t> spirv_file = shader->spirv;
-        spirv_cross::Parser parser(std::move(spirv_file));
+    shader->ParseResources();
 
-        parser.parse();
-        spirv_cross::CompilerHLSL compiler(std::move(parser.get_parsed_ir()));
-
-        auto &resources = compiler.get_shader_resources();
-
-        // TBI:..
-    }
-
-    /* Create a Vulkan shader object
-     */
-    const auto &spirv = shader->spirv;
-    const auto size_in_bytes = spirv.size() * sizeof(spirv[0]);
-    const auto module_create_info = vk::ShaderModuleCreateInfo()
-        .setPCode(spirv.data())
-        .setCodeSize(size_in_bytes);
-    shader->module = hw.device->createShaderModuleUnique(module_create_info);
+    shader->CreateModule();
 
     return true;
 }

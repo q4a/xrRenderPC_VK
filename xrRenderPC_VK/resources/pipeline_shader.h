@@ -1,6 +1,7 @@
 #ifndef RESOURCES_PIPELINE_SHADER_H_
 #define RESOURCES_PIPELINE_SHADER_H_
 
+#include <string>
 #include <vector>
 
 #include "xrCore/xr_resource.h"
@@ -11,9 +12,14 @@ enum class ShaderStage
     Fragment
 };
 
-struct PipelineShader
+class PipelineShader
     : public xr_resource_named
 {
+    friend class ResourceManager;
+
+    void CreateModule();
+    void ParseResources();
+public:
     std::string file_name;
     std::string entry_point;
     ShaderStage stage;
