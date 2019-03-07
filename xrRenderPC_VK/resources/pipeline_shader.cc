@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 
@@ -14,6 +15,70 @@
 #include "resources/manager.h"
 
 #include "resources/pipeline_shader.h"
+
+
+/*!
+ * \brief   Converts SPIR-V type into Vulkan's `VkFormat`
+ *
+ * The easiest way is to use `type_to_glsl()` from spirv-cross compiler,
+ * but unfortunately no implementation exposes it (the method is private).
+ * This function is very simple and only basic types handled.
+ */
+static vk::Format
+GetTypeFormat
+        ( const spirv_cross::SPIRType &type
+        )
+{
+    R_ASSERT(type.width == 32);
+
+    vk::Format format = vk::Format::eUndefined;
+
+    // TODO: Only vectors matter by now
+    if (type.vecsize > 1 && type.columns == 1)
+    {
+        switch (type.basetype)
+        {
+        case spirv_cross::SPIRType::Float:
+            switch (type.vecsize)
+            {
+            case 2:
+                format = vk::Format::eR32G32Sfloat;
+                break;
+            case 3:
+                format = vk::Format::eR32G32B32Sfloat;
+                break;
+            case 4:
+                format = vk::Format::eR32G32B32A32Sfloat;
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+        return format;
+    }
+
+    R_ASSERT(format != vk::Format::eUndefined);
+    return format;
+}
+
+
+/*!
+ * \brief   Calculates the size of a given SPIR-V type
+ */
+static std::size_t
+GetTypeSize
+        ( const spirv_cross::SPIRType &type
+        )
+{
+    const auto element_size       = type.width / 8;
+    const auto elements_in_row    = type.vecsize;
+    const auto elements_in_column = type.columns;
+
+    return element_size * elements_in_row * elements_in_column;
+}
 
 
 /*!
@@ -36,7 +101,7 @@ PipelineShader::CreateModule()
 
 
 /*!
- * \brief   Parse shader resources and create module's constant table.
+ * \brief   Parses shader resources and creates module's constant table.
  *
  * The function uses `spirv-cross` compiler for SPIR-V shader reflection.
  * Then iterates over resources to create a constant table, sampler or
@@ -48,9 +113,48 @@ PipelineShader::ParseResources()
     spirv_cross::Parser parser{ spirv.data(), spirv.size() };
     parser.parse();
 
+    //spirv_cross::CompilerHLSL compiler(std::move(parser.get_parsed_ir()));
     spirv_cross::CompilerHLSL compiler(std::move(parser.get_parsed_ir()));
 
+    // Check if specified entry point is valid
+    // NOTE: in case of DX the entry point is `main` for ages (proof?)
+    const auto &entry_points = compiler.get_entry_points();
+    const auto &iterator = std::find( entry_points.cbegin()
+                                    , entry_points.cend()
+                                    , entry_point
+    );
+    R_ASSERT2(iterator != entry_points.cend(), "Wrong entry point specified!");
+
+    // TODO: Check for pipeline stage binding point
+
     const auto &resources = compiler.get_shader_resources();
+
+    // In case of vertex shader we need to additionaly create a vertex
+    // format descriptor. It will used for vertex input stage description.
+    if (stage == ShaderStage::Vertex)
+    {
+        VertexShader *shader_ptr = static_cast<VertexShader *>(this);
+
+        std::uint32_t offset = 0;
+
+        const auto &inputs = resources.stage_inputs;
+        for (const auto &input : inputs)
+        {
+            VertexInput vertex_input;
+            vertex_input.offset   = offset;
+            vertex_input.location =
+                compiler.get_decoration(input.id, spv::DecorationLocation);
+
+            const auto &type = compiler.get_type(input.type_id);
+            vertex_input.format = GetTypeFormat(type);
+
+            const auto size = GetTypeSize(type);
+            shader_ptr->stride_size += size;
+            offset += size;
+
+            shader_ptr->inputs.push_back(vertex_input);
+        }
+    }
 }
 
 
