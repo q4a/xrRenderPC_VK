@@ -30,7 +30,7 @@ public:
     std::vector<std::string> constants;
     std::vector<std::string> matrices;
 
-    std::shared_ptr<ShaderElement> shader_element; ///< Compilation target
+    ShaderElement *shader_element; ///< Compilation target
     ShaderElementType current_element; ///< Compilation target stage
     ShaderPass pass; ///< Intermediate pass data
 
@@ -38,8 +38,7 @@ public:
     bool detail = false;
 
 private:
-    /** Graphics pipeline stages  */
-    std::array<vk::PipelineShaderStageCreateInfo, max_shader_stages> shader_stages_;
+    void CreatePipeline();
 };
 
 #endif // RESOURCES_BLENDER_COMPILER_H_

@@ -140,7 +140,9 @@ PipelineShader::ParseResources()
         const auto &inputs = resources.stage_inputs;
         for (const auto &input : inputs)
         {
-            VertexInput vertex_input;
+            vk::VertexInputAttributeDescription vertex_input;
+
+            vertex_input.binding  = 0;
             vertex_input.offset   = offset;
             vertex_input.location =
                 compiler.get_decoration(input.id, spv::DecorationLocation);

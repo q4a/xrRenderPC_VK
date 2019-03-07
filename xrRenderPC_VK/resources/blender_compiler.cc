@@ -8,6 +8,11 @@ BlenderCompiler::Compile
         ( ShaderElement &element
         )
 {
+    /* Store pointer to target element for further
+     * updates while going through blender passes
+     */
+    shader_element = &element;
+
     // TBI
     blender->Compile(*this);
 }
@@ -24,30 +29,6 @@ BlenderCompiler::PassBegin
         frontend.resources_->CreateVertexShader(vertex_shader);
     pass.fragment_shader =
         frontend.resources_->CreateFragmentShader(fragment_shader);
-
-    /* Create shader stages
-     */
-    {
-        const auto index = static_cast<std::size_t>(ShaderStage::Vertex);
-
-        auto &vertex = shader_stages_[index];
-        vertex
-            .setModule(pass.vertex_shader->module.get())
-            .setPName(pass.vertex_shader->file_name.c_str())
-            .setStage(vk::ShaderStageFlagBits::eVertex);
-
-        // TODO fill in vertex input state
-    }
-
-    {
-        const auto index = static_cast<std::size_t>(ShaderStage::Fragment);
-
-        auto &vertex = shader_stages_[index];
-        vertex
-            .setModule(pass.fragment_shader->module.get())
-            .setPName(pass.fragment_shader->file_name.c_str())
-            .setStage(vk::ShaderStageFlagBits::eFragment);
-    }
 
     // TODO: Merge constant tables
 }
@@ -66,15 +47,63 @@ BlenderCompiler::PassTexture
 void
 BlenderCompiler::PassEnd()
 {
-    /* Create graphics pipeline
-     */
-    vk::PipelineInputAssemblyStateCreateInfo()
-        .setTopology(vk::PrimitiveTopology::eTriangleList); // FIXME: this should be defined by renderer
-
+    CreatePipeline();
 
     /* Register shader pass resource and add it
      * into parent shader element
      */
     const auto pass_ptr = frontend.resources_->CreateShaderPass(pass);
     shader_element->shader_passes.push_back(pass_ptr);
+}
+
+
+/*!
+ * \brief   Create GPO for current render pass
+ *
+ */
+void
+BlenderCompiler::CreatePipeline()
+{
+    /* Shader stages
+     */
+    std::array< vk::PipelineShaderStageCreateInfo, max_shader_stages> shader_stages;
+
+    {
+        const auto index = static_cast<std::size_t>(ShaderStage::Vertex);
+
+        auto &vertex = shader_stages[index];
+        vertex
+            .setModule(pass.vertex_shader->module.get())
+            .setPName(pass.vertex_shader->file_name.c_str())
+            .setStage(vk::ShaderStageFlagBits::eVertex);
+    }
+
+    {
+        const auto index = static_cast<std::size_t>(ShaderStage::Fragment);
+
+        auto &vertex = shader_stages[index];
+        vertex
+            .setModule(pass.fragment_shader->module.get())
+            .setPName(pass.fragment_shader->file_name.c_str())
+            .setStage(vk::ShaderStageFlagBits::eFragment);
+    }
+
+    /* Vertex inputs
+     */
+    const auto input_binding_description = vk::VertexInputBindingDescription()
+        .setBinding(0)
+        .setStride(pass.vertex_shader->stride_size)
+        .setInputRate(vk::VertexInputRate::eVertex);
+
+    const auto input_state_create_info = vk::PipelineVertexInputStateCreateInfo()
+        .setVertexBindingDescriptionCount(1)
+        .setPVertexBindingDescriptions(&input_binding_description)
+        .setVertexAttributeDescriptionCount(pass.vertex_shader->inputs.size())
+        .setPVertexAttributeDescriptions(pass.vertex_shader->inputs.data());
+
+    /* Input assembly
+     */
+    vk::PipelineInputAssemblyStateCreateInfo()
+        .setTopology(vk::PrimitiveTopology::eTriangleList); // FIXME: this should be defined by renderer
+
 }

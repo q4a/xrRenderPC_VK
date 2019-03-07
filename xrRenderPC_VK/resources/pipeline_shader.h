@@ -29,18 +29,11 @@ public:
     // TODO: constant table
 };
 
-typedef struct
-{
-    vk::Format    format;
-    std::uint32_t location;
-    std::uint32_t offset;
-} VertexInput;
-
 struct VertexShader
     : public PipelineShader
 {
     std::size_t stride_size = 0;
-    std::vector<VertexInput> inputs;
+    std::vector<vk::VertexInputAttributeDescription> inputs;
 };
 
 struct FragmentShader
