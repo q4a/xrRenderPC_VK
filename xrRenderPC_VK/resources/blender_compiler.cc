@@ -1,3 +1,4 @@
+#include "device/device.h"
 #include "frontend/render.h"
 #include "resources/blender_screen_set.h"
 
@@ -60,6 +61,8 @@ BlenderCompiler::PassEnd()
 /*!
  * \brief   Create GPO for current render pass
  *
+ * TODO: probably most of the structures can be static stencils to speedup
+ *       the pipeline creation.
  */
 void
 BlenderCompiler::CreatePipeline()
@@ -106,4 +109,21 @@ BlenderCompiler::CreatePipeline()
     vk::PipelineInputAssemblyStateCreateInfo()
         .setTopology(vk::PrimitiveTopology::eTriangleList); // FIXME: this should be defined by renderer
 
+    /* Viewport and scissors
+     */
+    const auto viewport = vk::Viewport()
+        .setWidth(hw.draw_rect.width)
+        .setHeight(hw.draw_rect.height);
+    // TODO: max depth!
+
+    const auto scissor = vk::Rect2D()
+        .setExtent(hw.draw_rect);
+
+    const auto viewport_create_info = vk::PipelineViewportStateCreateInfo()
+        .setViewportCount(1)
+        .setPViewports(&viewport)
+        .setScissorCount(1)
+        .setPScissors(&scissor);
+
+    // TBI::..
 }
