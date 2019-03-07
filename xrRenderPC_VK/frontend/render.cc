@@ -129,8 +129,8 @@ FrontEnd::CreateRenderPass()
             .setRenderPass(renderpass_.get())
             .setAttachmentCount(1)
             .setPAttachments(&resource.imageView)
-            .setWidth(hw.drawRect.width)
-            .setHeight(hw.drawRect.height)
+            .setWidth(hw.draw_rect.width)
+            .setHeight(hw.draw_rect.height)
             .setLayers(1); // not stereo
 
         resource.frameBuffer =
@@ -294,8 +294,8 @@ FrontEnd::Begin()
         .setRenderPass(renderpass_.get())
         .setFramebuffer(swapchain_resource.frameBuffer)
         .setRenderArea(vk::Rect2D( vk::Offset2D(0, 0)
-                                 , vk::Extent2D( hw.drawRect.width
-                                               , hw.drawRect.height
+                                 , vk::Extent2D( hw.draw_rect.width
+                                               , hw.draw_rect.height
         )));
 //        .setClearValueCount(1)
 //        .setPClearValues(&clearValue);

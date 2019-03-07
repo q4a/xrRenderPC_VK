@@ -77,7 +77,7 @@ public:
 
     // Swapchain
     vk::SwapchainKHR swapchain = nullptr;
-    vk::Extent2D drawRect;  //< presentation surface dimensions
+    vk::Extent2D draw_rect;  //< presentation surface dimensions
     std::vector<SwapchainResource> baseRt;
 
 private:

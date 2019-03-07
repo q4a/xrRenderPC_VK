@@ -13,6 +13,7 @@
 - [ ] Remove resource reference counting from `Create*` (shared ptr already do this)
 - [ ] Shader compiler lacks constant reflection (consider `spirv-cross`)
 - [ ] Blender compiler uses TL as default pipeline topology
+- [ ] Shaders cache doesn't take CRC into account. Probably there is possibility to add it into SPIR-V as comment block
 
 ### Back end
 

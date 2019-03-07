@@ -175,14 +175,14 @@ Hw::CreateSwapchain()
     if (caps.wsiSurfaceCaps.currentExtent.width == undefinedSize)
     {
         // surface doesn't care about size. Set desired
-        drawRect.setWidth(Device.dwWidth);
-        drawRect.setHeight(Device.dwHeight);
+        draw_rect.setWidth(Device.dwWidth);
+        draw_rect.setHeight(Device.dwHeight);
     }
     else
     {
         // fixed size: likely windowed mode. Go with it
         // TODO: what should we do? How to notify application?
-        drawRect = caps.wsiSurfaceCaps.currentExtent;
+        draw_rect = caps.wsiSurfaceCaps.currentExtent;
     }
 
     const auto presentMode = SelectPresentMode();
@@ -197,7 +197,7 @@ Hw::CreateSwapchain()
     const auto swapchainCreateInfo = vk::SwapchainCreateInfoKHR()
         .setOldSwapchain(swapchain)
         .setSurface(wsiSurface_.get())
-        .setImageExtent(drawRect)
+        .setImageExtent(draw_rect)
         .setPresentMode(presentMode)
         .setMinImageCount(minImages)
         .setImageFormat(colorFormat)
