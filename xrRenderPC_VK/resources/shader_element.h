@@ -7,6 +7,12 @@
 #include "resources/pipeline_shader.h"
 #include "resources/shader_pass.h"
 
+enum class ShaderElementType
+{
+    NormalHq,
+    NormalLq,
+};
+
 enum class ShaderPassType
 {
     Forward,

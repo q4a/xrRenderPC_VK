@@ -73,6 +73,8 @@ private:
     VertexShaders   vertex_shaders_;
     FragmentShaders fragment_shaders_;
 
+    std::map<std::string, std::string> shader_options_;
+
     using Shaders        = std::vector<std::shared_ptr<Shader>>;
     using ShaderElements = std::vector<std::shared_ptr<ShaderElement>>;
     using ShaderPasses   = std::vector<std::shared_ptr<ShaderPass>>;

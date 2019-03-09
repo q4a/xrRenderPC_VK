@@ -6,9 +6,9 @@
 
 #include "xrCore/FileCRC32.h"
 
-#include "spirv_cross/spirv_cross.hpp"
-#include "spirv_cross/spirv_parser.hpp"
-#include "spirv_cross/spirv_hlsl.hpp"
+#include <spirv_cross.hpp>
+#include <spirv_parser.hpp>
+#include <spirv_hlsl.hpp>
 
 #include "device/device.h"
 #include "frontend/render.h"
@@ -113,19 +113,10 @@ PipelineShader::ParseResources()
     spirv_cross::Parser parser{ spirv.data(), spirv.size() };
     parser.parse();
 
-    //spirv_cross::CompilerHLSL compiler(std::move(parser.get_parsed_ir()));
     spirv_cross::CompilerHLSL compiler(std::move(parser.get_parsed_ir()));
 
-    // Check if specified entry point is valid
+    // TODO: Check for entry point and execution model
     // NOTE: in case of DX the entry point is `main` for ages (proof?)
-    const auto &entry_points = compiler.get_entry_points();
-    const auto &iterator = std::find( entry_points.cbegin()
-                                    , entry_points.cend()
-                                    , entry_point
-    );
-    R_ASSERT2(iterator != entry_points.cend(), "Wrong entry point specified!");
-
-    // TODO: Check for pipeline stage binding point
 
     const auto &resources = compiler.get_shader_resources();
 
