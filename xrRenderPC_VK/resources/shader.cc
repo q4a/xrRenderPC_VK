@@ -3,6 +3,7 @@
 
 #include "resources/shader.h"
 
+
 /**
  *
  */
@@ -14,9 +15,42 @@ ResourceManager::CreateShader
         , const std::string &matrices
         )
 {
+    std::shared_ptr<Shader> result{};
+
+    if (ScriptingHasShader(shader_name))
+    {
+        result = CreateShaderLua( shader_name
+                                , textures
+        );
+    }
+    else
+    {
+        result = CreateShaderCpp( shader_name
+                                , textures
+                                , constants
+                                , matrices
+        );
+
+        // TODO: implement fallback variant
+    }
+
+    return result;
+}
+
+
+/**
+ *
+ */
+std::shared_ptr<Shader>
+ResourceManager::CreateShaderCpp
+        ( const std::string &shader_name
+        , const std::string &textures
+        , const std::string &constants
+        , const std::string &matrices
+        )
+{
     std::shared_ptr<Shader> shader;
 
-    // TODO: check for LUA shaders
     auto blender = GetBlender(shader_name);
     if (!blender)
     {

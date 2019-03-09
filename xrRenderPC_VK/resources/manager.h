@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "xrScriptEngine/script_engine.hpp"
+
 #include "backend/streams.h"
 #include "resources/constant.h"
 #include "resources/matrix.h"
@@ -47,6 +49,16 @@ public:
     FragmentShaderPtr CreateFragmentShader(const std::string &name);
 
 private:
+    void ScriptingLoad();
+    bool ScriptingHasShader(const std::string &shader_name);
+    void ScriptingUnload();
+
+    std::shared_ptr<Shader> CreateShaderLua(const std::string &shader_name,
+        const std::string &textures);
+    std::shared_ptr<Shader> CreateShaderCpp(const std::string &shader_name,
+        const std::string &textures, const std::string &constants,
+        const std::string &matrices);
+
     std::shared_ptr<Constant> CreateConstant(LPCSTR name);
     void DeleteConstant(const std::shared_ptr<Constant> &constant);
 
@@ -69,6 +81,8 @@ private:
     bool CompileShader(const std::string &name, PipelineShader *shader);
 
 private:
+    CScriptEngine script_engine_;
+
     TextureDescription texture_description_;
 
     VertexShaders   vertex_shaders_;

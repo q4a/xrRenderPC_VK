@@ -175,6 +175,9 @@ ResourceManager::OnDeviceCreate
         ( const std::string &file_name
         )
 {
+    // Load scripted blenders
+    ScriptingLoad();
+
     const std::string signature { "shENGINE" };
     string32 id;
     IReader *rstream = FS.r_open(file_name.c_str());
@@ -290,6 +293,8 @@ ResourceManager::OnDeviceDestroy()
         R_ASSERT(constant.second.unique());
     }
     constants_.clear();
+
+    ScriptingUnload();
 }
 
 
