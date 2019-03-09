@@ -57,6 +57,7 @@ private:
     std::shared_ptr<Blender> GetBlender(const std::string &name);
 
     void ParseList(const std::string &list, std::vector<std::string> &strings);
+    void RemoveTexturesExtension(std::vector<std::string> &strings);
 
     template <class T>
     std::map<std::string, std::shared_ptr<T>> &GetShaderMap();

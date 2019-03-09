@@ -28,6 +28,7 @@ ResourceManager::CreateShader
     // Initialize compiler
     BlenderCompiler compiler;
     ParseList(textures,  compiler.textures);
+    RemoveTexturesExtension(compiler.textures);
     ParseList(constants, compiler.constants);
     ParseList(matrices,  compiler.matrices);
 

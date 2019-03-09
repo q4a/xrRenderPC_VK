@@ -293,15 +293,6 @@ ResourceManager::OnDeviceDestroy()
 }
 
 
-const std::vector<std::string> texture_extensions =
-{
-    "tga",
-    "dds",
-    "bmp",
-    "ogm"
-};
-
-
 /**
  *
  */
@@ -348,6 +339,28 @@ ResourceManager::ParseList
     split_with(list, strings, ',');
 
     // Remove extensions
+
+}
+
+/*!
+ * Texture types supported by the engine
+ */
+const std::vector<std::string> texture_extensions =
+{
+    "tga",
+    "dds",
+    "bmp",
+    "ogm"
+};
+
+/*!
+ * \brief   Removes image format extensions from a given file name list
+ */
+void
+ResourceManager::RemoveTexturesExtension
+        ( std::vector<std::string> &strings
+        )
+{
     auto remove_extension = [](const std::string &file_name) -> std::string
     {
         for (const auto &extension : texture_extensions)
