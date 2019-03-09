@@ -31,7 +31,8 @@ BlenderCompiler::PassBegin
     pass.fragment_shader =
         frontend.resources_->CreateFragmentShader(fragment_shader);
 
-    // TODO: Merge constant tables
+    constant_table.Merge(pass.vertex_shader->constant_table);
+    constant_table.Merge(pass.fragment_shader->constant_table);
 }
 
 

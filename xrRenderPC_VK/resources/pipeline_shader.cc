@@ -148,6 +148,40 @@ PipelineShader::ParseResources()
             shader_ptr->inputs.push_back(vertex_input);
         }
     }
+
+    // Parse constants
+    R_ASSERT(resources.uniform_buffers.size() <= 1); // TODO: is it possible to have >1 ?
+    if (resources.uniform_buffers.size())
+    {
+        const auto &ubo  = resources.uniform_buffers[0];
+        const auto &type = compiler.get_type(ubo.type_id);
+
+        constant_table.table_size = compiler.get_declared_struct_size(type);
+
+        for ( auto member_index = 0
+            ; member_index < type.member_types.size()
+            ; member_index++
+            )
+        {
+            ShaderConstant constant;
+
+            constant.offset =
+                compiler.type_struct_member_offset(type, member_index);
+            constant.size   =
+                compiler.get_declared_struct_member_size(type, member_index);
+
+            const auto &name =
+                compiler.get_member_name(ubo.base_type_id, member_index);
+            constant_table.constants[name] = constant;
+        }
+        constant_table.binding =
+            compiler.get_decoration(ubo.id, spv::DecorationBinding);
+        constant_table.set =
+            compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
+    }
+
+    // Parse samplers
+    // TBI
 }
 
 

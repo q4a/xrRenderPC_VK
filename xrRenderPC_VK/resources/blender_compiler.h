@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "resources/constant_table.h"
 #include "resources/blender.h"
 #include "resources/pipeline_shader.h"
 #include "resources/shader.h"
@@ -33,6 +34,7 @@ public:
     ShaderElement *shader_element; ///< Compilation target
     ShaderElementType current_element; ///< Compilation target stage
     ShaderPass pass; ///< Intermediate pass data
+    ConstantTable constant_table; ///< Uniforms. One buffer for two passes
 
     std::shared_ptr<Blender> blender;
     bool detail = false;

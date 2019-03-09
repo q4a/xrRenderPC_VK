@@ -6,6 +6,8 @@
 
 #include "xrCore/xr_resource.h"
 
+#include "resources/constant_table.h"
+
 enum class ShaderStage
 {
     Vertex,
@@ -26,7 +28,7 @@ public:
 
     std::vector<std::uint32_t> spirv;
     vk::UniqueShaderModule module;
-    // TODO: constant table
+    ConstantTable constant_table;
 };
 
 struct VertexShader
