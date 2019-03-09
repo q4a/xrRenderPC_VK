@@ -412,39 +412,6 @@ ResourceManager::CompileShader
                 , shader_crc
     );
 
-    rsource->rewind();
-
-    /* Copy shader source to feed it into further stages
-     */
-    std::vector<char> shader_source(rsource->length());
-    CopyMemory( shader_source.data()
-              , rsource->pointer()
-              , rsource->length()
-    );
-
-    FS.r_close(rsource); // No need the stream anymore
-
-    /* Dump shader text source
-     */
-    if (frontend.o.shader__dump_source)
-    {
-        string_path source_path;
-        strconcat( sizeof(source_path)
-                 , source_path
-                 , "shaders_cache" DELIMITER
-                 , cache_folder
-                 , DELIMITER
-                 , shader->file_name.c_str()
-        );
-
-        IWriter *wstream = FS.w_open_ex("$app_data_root$", source_path);
-        if (wstream)
-        {
-            wstream->w(shader_source.data(), shader_source.size());
-            FS.w_close(wstream);
-        }
-    }
-
     bool is_cache_valid = false;
 
     if (FS.exist(cache_absolute_path))
@@ -475,6 +442,29 @@ ResourceManager::CompileShader
         /* Compile shader from scratch
          */
 
+        rsource->rewind();
+
+        /* Dump shader text source
+         */
+        if (frontend.o.shader__dump_source)
+        {
+            string_path source_path;
+            strconcat( sizeof(source_path)
+                     , source_path
+                     , "shaders_cache" DELIMITER
+                     , cache_folder
+                     , DELIMITER
+                     , shader->file_name.c_str()
+            );
+
+            IWriter *wstream = FS.w_open_ex("$app_data_root$", source_path);
+            if (wstream)
+            {
+                wstream->w(rsource->pointer(), rsource->length());
+                FS.w_close(wstream);
+            }
+        }
+
         shaderc_shader_kind shader_kind;
         switch (shader->stage)
         {
@@ -496,8 +486,10 @@ ResourceManager::CompileShader
         options.SetIncluder(std::make_unique<Includer>());
         options.SetHlslIoMapping(true);
 
+        const char *source_ptr = static_cast<const char *>(rsource->pointer());
         shaderc::CompilationResult output =
-            compiler.CompileGlslToSpv( shader_source.data()
+            compiler.CompileGlslToSpv( source_ptr
+                                     , rsource->length()
                                      , shader_kind
                                      , name.c_str()
                                      , shader->entry_point.c_str()
@@ -532,6 +524,8 @@ ResourceManager::CompileShader
         wcache->w(spirv.data(), size_in_bytes);
         FS.w_close(wcache);
     }
+
+    FS.r_close(rsource);
 
     /* Disassemble if needed
      */
