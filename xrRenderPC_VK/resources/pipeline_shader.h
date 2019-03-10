@@ -9,17 +9,6 @@
 
 #include "resources/constant_table.h"
 
-enum class ShaderStage
-{
-    Vertex,
-    Fragment
-};
-
-struct ImageResource
-{
-    std::uint32_t set;
-    std::uint32_t binding;
-};
 
 class PipelineShader
     : public xr_resource_named
@@ -31,13 +20,11 @@ class PipelineShader
 public:
     std::string file_name;
     std::string entry_point;
-    ShaderStage stage;
+    vk::ShaderStageFlagBits stage;
 
     std::vector<std::uint32_t> spirv;
     vk::UniqueShaderModule module;
-    ConstantTable constant_table;
-    std::map<std::string, ImageResource> samplers;
-    std::map<std::string, ImageResource> textures;
+    std::map<std::string, ShaderResource> constants;
 };
 
 struct VertexShader
@@ -61,7 +48,8 @@ template <>
 struct ShaderTypeTraits<VertexShader>
 {
     static const inline std::string file_extension = ".vs";
-    static const ShaderStage stage = ShaderStage::Vertex;
+    static const vk::ShaderStageFlagBits stage =
+        vk::ShaderStageFlagBits::eVertex;
 };
 
 
@@ -69,7 +57,8 @@ template <>
 struct ShaderTypeTraits<FragmentShader>
 {
     static const inline std::string file_extension = ".ps";
-    static const ShaderStage stage = ShaderStage::Fragment;
+    static const vk::ShaderStageFlagBits stage =
+        vk::ShaderStageFlagBits::eFragment;
 };
 
 #endif // RESOURCES_PIPELINE_SHADER_H_

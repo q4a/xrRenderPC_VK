@@ -122,7 +122,7 @@ PipelineShader::ParseResources()
 
     // In case of vertex shader we need to additionaly create a vertex
     // format descriptor. It will used for vertex input stage description.
-    if (stage == ShaderStage::Vertex)
+    if (stage == vk::ShaderStageFlagBits::eVertex)
     {
         VertexShader *shader_ptr = static_cast<VertexShader *>(this);
 
@@ -150,13 +150,18 @@ PipelineShader::ParseResources()
     }
 
     // Parse constants
-    R_ASSERT(resources.uniform_buffers.size() <= 1); // TODO: is it possible to have >1 ?
-    if (resources.uniform_buffers.size())
+    for (const auto &ubo : resources.uniform_buffers)
     {
-        const auto &ubo  = resources.uniform_buffers[0];
-        const auto &type = compiler.get_type(ubo.type_id);
+        ConstantTable constant_buffer;
 
-        constant_table.table_size = compiler.get_declared_struct_size(type);
+        const auto &type = compiler.get_type(ubo.type_id);
+        constant_buffer.type    = vk::DescriptorType::eUniformBuffer;
+        constant_buffer.size    = compiler.get_declared_struct_size(type);
+        constant_buffer.stage   = stage;
+        constant_buffer.binding =
+            compiler.get_decoration(ubo.id, spv::DecorationBinding);
+        constant_buffer.set     =
+            compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
 
         for ( auto member_index = 0
             ; member_index < type.member_types.size()
@@ -172,38 +177,40 @@ PipelineShader::ParseResources()
 
             const auto &name =
                 compiler.get_member_name(ubo.base_type_id, member_index);
-            constant_table.constants[name] = constant;
+            constant_buffer.constants[name] = constant;
         }
-        constant_table.binding =
-            compiler.get_decoration(ubo.id, spv::DecorationBinding);
-        constant_table.set =
-            compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
+
+        constants[ubo.name] = constant_buffer;
     }
 
     // Parse samplers
     for (const auto &sampler : resources.separate_samplers)
     {
-        ImageResource sampler_resource;
+        ShaderResource sampler_resource;
 
+        sampler_resource.type    = vk::DescriptorType::eSampler;
+        sampler_resource.stage   = stage;
         sampler_resource.binding =
             compiler.get_decoration(sampler.id, spv::DecorationBinding);
-        sampler_resource.set =
+        sampler_resource.set     =
             compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
 
-        samplers[sampler.name] = sampler_resource;
+        constants[sampler.name] = sampler_resource;
     }
 
     // Parse textures
     for (const auto &texture : resources.separate_images)
     {
-        ImageResource texture_resource;
+        ShaderResource texture_resource;
 
+        texture_resource.type    = vk::DescriptorType::eSampledImage;
+        texture_resource.stage   = stage;
         texture_resource.binding =
             compiler.get_decoration(texture.id, spv::DecorationBinding);
-        texture_resource.set =
+        texture_resource.set     =
             compiler.get_decoration(texture.id, spv::DecorationDescriptorSet);
 
-        samplers[texture.name] = texture_resource;
+        constants[texture.name] = texture_resource;
     }
 }
 
@@ -525,10 +532,10 @@ ResourceManager::CompileShader
         shaderc_shader_kind shader_kind;
         switch (shader->stage)
         {
-        case ShaderStage::Vertex:
+        case vk::ShaderStageFlagBits::eVertex:
             shader_kind = shaderc_shader_kind::shaderc_glsl_vertex_shader;
             break;
-        case ShaderStage::Fragment:
+        case vk::ShaderStageFlagBits::eFragment:
             shader_kind = shaderc_shader_kind::shaderc_glsl_fragment_shader;
             break;
         default:
