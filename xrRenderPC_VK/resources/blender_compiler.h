@@ -22,7 +22,7 @@ public:
     void PassBegin(const std::string &vertex_shader, const std::string &fragment_shader);
     void PassTexture(const std::string &name, const std::string &texture);
     void PassSampler(const std::string &name) {}
-    void PassZtest(bool ztest, bool zwrite) {}
+    void PassZtest(bool z_test, bool z_write, bool invert_test = false);
     void PassBlend(bool alpha, u32 source, u32 destination, bool test, u32 key) {}
     void PassLightingFog(bool lighting, bool fog) {}
     void PassEnd();

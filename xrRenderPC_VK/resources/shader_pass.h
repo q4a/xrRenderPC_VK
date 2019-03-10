@@ -9,6 +9,7 @@ struct ShaderPass
 
     std::shared_ptr<VertexShader>   vertex_shader;
     std::shared_ptr<FragmentShader> fragment_shader;
+    vk::Pipeline pipeline;
 };
 
 #endif // RESOURCES_SHADER_PASS_H_

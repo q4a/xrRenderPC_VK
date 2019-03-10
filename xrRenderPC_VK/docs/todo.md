@@ -11,9 +11,11 @@
 #### Resource Manager
 
 - [ ] Remove resource reference counting from `Create*` (shared ptr already do this)
-- [ ] Shader compiler lacks constant reflection (consider `spirv-cross`)
+- [x] Shader compiler lacks constant reflection (consider `spirv-cross`)
 - [ ] Blender compiler uses TL as default pipeline topology
 - [ ] Shaders cache doesn't take CRC into account. Probably there is possibility to add it into SPIR-V as comment block
+- [ ] Blender compiler is a Pipeline compiler. Should be renamed
+- [ ] Create the RM statically, outside of front end scope
 
 ### Back end
 
