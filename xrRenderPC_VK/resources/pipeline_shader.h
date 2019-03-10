@@ -1,6 +1,7 @@
 #ifndef RESOURCES_PIPELINE_SHADER_H_
 #define RESOURCES_PIPELINE_SHADER_H_
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,12 @@ enum class ShaderStage
 {
     Vertex,
     Fragment
+};
+
+struct ImageResource
+{
+    std::uint32_t set;
+    std::uint32_t binding;
 };
 
 class PipelineShader
@@ -29,6 +36,8 @@ public:
     std::vector<std::uint32_t> spirv;
     vk::UniqueShaderModule module;
     ConstantTable constant_table;
+    std::map<std::string, ImageResource> samplers;
+    std::map<std::string, ImageResource> textures;
 };
 
 struct VertexShader

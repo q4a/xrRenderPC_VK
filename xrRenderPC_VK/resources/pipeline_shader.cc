@@ -181,7 +181,30 @@ PipelineShader::ParseResources()
     }
 
     // Parse samplers
-    // TBI
+    for (const auto &sampler : resources.separate_samplers)
+    {
+        ImageResource sampler_resource;
+
+        sampler_resource.binding =
+            compiler.get_decoration(sampler.id, spv::DecorationBinding);
+        sampler_resource.set =
+            compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
+
+        samplers[sampler.name] = sampler_resource;
+    }
+
+    // Parse textures
+    for (const auto &texture : resources.separate_images)
+    {
+        ImageResource texture_resource;
+
+        texture_resource.binding =
+            compiler.get_decoration(texture.id, spv::DecorationBinding);
+        texture_resource.set =
+            compiler.get_decoration(texture.id, spv::DecorationDescriptorSet);
+
+        samplers[texture.name] = texture_resource;
+    }
 }
 
 
@@ -411,7 +434,7 @@ ResourceManager::CompileShader
              , cache_folder
              , DELIMITER
              , shader_hash_name.str().c_str()
-             , ".spirv"
+             , ".spv"
     );
 
     string_path cache_absolute_path;
@@ -516,9 +539,32 @@ ResourceManager::CompileShader
         shaderc::Compiler compiler{};
         shaderc::CompileOptions options{};
 
+        for (const auto &macro : defines)
+        {
+            options.AddMacroDefinition(macro.first, macro.second);
+        }
+
         options.SetSourceLanguage(shaderc_source_language_hlsl);
+        options.SetTargetEnvironment(
+            shaderc_target_env::shaderc_target_env_vulkan, 1);
         options.SetIncluder(std::make_unique<Includer>());
-        options.SetHlslIoMapping(true);
+
+        options.SetHlslFunctionality1(true);
+        options.SetAutoBindUniforms(true);
+
+        /* Since we have separate modules compilation and DX shaders
+         * do not have hints to determine constant set and binding,
+         * we split bindig ranges in accordance to the common headers
+         * content.
+         */
+        constexpr auto max_ubos = 4; // samplers go here
+        options.SetBindingBase(
+            shaderc_uniform_kind::shaderc_uniform_kind_sampler, max_ubos
+        );
+        // separate textures have the same binding as samplers
+        options.SetBindingBase(
+            shaderc_uniform_kind::shaderc_uniform_kind_texture, max_ubos
+        );
 
         const char *source_ptr = static_cast<const char *>(rsource->pointer());
         shaderc::CompilationResult output =
