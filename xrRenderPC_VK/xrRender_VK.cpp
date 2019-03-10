@@ -1,9 +1,22 @@
 
+#include "backend/backend.h"
 #include "console.h"
+#include "debug/render.h"
 #include "factory/factory.h"
 #include "frontend/render.h"
+#include "resources/manager.h"
 #include "ui/render.h"
-#include "debug/render.h"
+
+
+/*!
+ * Statically created objects
+ */
+BackEnd         backend;
+FrontEnd        frontend;
+ResourceManager resources;
+RenderFactory   factory;
+DebugRender     debug;
+
 
 /*
  * TODO:

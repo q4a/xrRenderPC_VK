@@ -1,7 +1,5 @@
 #include "factory/factory.h"
 
-RenderFactory factory;
-
 #define RENDER_FACTORY_IMPLEMENT(Class)                     \
     I##Class * RenderFactory::Create##Class()               \
     {                                                       \

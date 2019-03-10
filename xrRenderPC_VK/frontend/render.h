@@ -184,7 +184,6 @@ public:
         bool shader__dump_source        = true;
         bool shader__disassemble        = false;
     } o;
-    std::unique_ptr<ResourceManager> resources_; // accessed by Shader class
 };
 
 extern FrontEnd frontend;

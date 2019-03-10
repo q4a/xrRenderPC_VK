@@ -70,10 +70,10 @@ BlenderCompiler::MergeConstants
 {
     for (const auto &[name, constant] : shader_resources)
     {
-        const auto &iterator = resources.find(name);
-        if (iterator == resources.cend())
+        const auto &iterator = pass_resources.find(name);
+        if (iterator == pass_resources.cend())
         {
-            resources.insert(std::make_pair(name, constant));
+            pass_resources.insert(std::make_pair(name, constant));
         }
     }
 }
@@ -87,10 +87,8 @@ BlenderCompiler::PassBegin
 {
     /* Load and compile shaders
      */
-    pass.vertex_shader =
-        frontend.resources_->CreateVertexShader(vertex_shader);
-    pass.fragment_shader =
-        frontend.resources_->CreateFragmentShader(fragment_shader);
+    pass.vertex_shader   = resources.CreateVertexShader(vertex_shader);
+    pass.fragment_shader = resources.CreateFragmentShader(fragment_shader);
 
     MergeConstants(pass.vertex_shader->constants);
     MergeConstants(pass.fragment_shader->constants);
@@ -103,8 +101,8 @@ BlenderCompiler::PassTexture
         , const std::string &texture_name
         )
 {
-    const auto &iterator = resources.find(resource_name);
-    VERIFY(iterator != resources.cend());
+    const auto &iterator = pass_resources.find(resource_name);
+    VERIFY(iterator != pass_resources.cend());
     VERIFY(iterator->second.type == vk::DescriptorType::eSampledImage);
 }
 
@@ -137,7 +135,7 @@ BlenderCompiler::PassEnd()
     /* Register shader pass resource and add it
      * into parent shader element
      */
-    const auto pass_ptr = frontend.resources_->CreateShaderPass(pass);
+    const auto pass_ptr = resources.CreateShaderPass(pass);
     shader_element->shader_passes.push_back(pass_ptr);
 }
 
@@ -149,7 +147,7 @@ BlenderCompiler::CreatePipelineLayout() const
 {
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
 
-    for (const auto &resource : resources)
+    for (const auto &resource : pass_resources)
     {
         auto binding = vk::DescriptorSetLayoutBinding()
             .setBinding(resource.second.binding)

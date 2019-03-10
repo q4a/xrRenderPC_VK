@@ -1,7 +1,5 @@
 #include "backend/backend.h"
 
-BackEnd backend;
-
 constexpr std::size_t kilobyte = 1024;
 constexpr std::size_t operator"" _Kb
         ( unsigned long long value

@@ -1,17 +1,19 @@
 #include "factory/font/render.h"
 
-#include "frontend/render.h"
+#include "resources/manager.h"
 
 /**
  *
  */
 void
 fFontRender::Initialize
-        ( LPCSTR shader
-        , LPCSTR texture
+        ( LPCSTR shader_name
+        , LPCSTR texture_name
         )
 {
-    frontend.resources_->CreateShader(shader, texture, "", "");
+    shader_ = resources.CreateShader( shader_name
+                                    , texture_name
+    );
 }
 
 

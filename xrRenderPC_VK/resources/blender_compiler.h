@@ -34,7 +34,7 @@ public:
     ShaderElement *shader_element; ///< Compilation target
     ShaderElementType current_element; ///< Compilation target stage
     ShaderPass pass; ///< Intermediate pass data
-    std::map<std::string, ShaderResource> resources;
+    std::map<std::string, ShaderResource> pass_resources;
 
     std::shared_ptr<Blender> blender;
     bool detail = false;

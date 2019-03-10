@@ -3,8 +3,6 @@
 
 #include "frontend/render.h"
 
-FrontEnd frontend;
-
 
 /**
  *
@@ -183,8 +181,6 @@ FrontEnd::Create
     {
         semaphore = hw.device->createSemaphoreUnique({});
     }
-
-    resources_ = std::make_unique<ResourceManager>();
 }
 
 
@@ -194,8 +190,6 @@ FrontEnd::Create
 void
 FrontEnd::DestroyHW()
 {
-    resources_.reset();
-
     DestroyRenderPass();
 
     DestroyCommandBuffers();
@@ -214,7 +208,7 @@ FrontEnd::OnDeviceCreate
 {
     backend.OnDeviceCreate();
 
-    resources_->OnDeviceCreate(shader);
+    resources.OnDeviceCreate(shader);
 }
 
 
