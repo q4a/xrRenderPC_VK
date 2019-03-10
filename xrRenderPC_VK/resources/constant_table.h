@@ -4,6 +4,13 @@
 #include <map>
 #include <string>
 
+struct ShaderResource
+{
+    std::uint32_t set;
+    std::uint32_t binding;
+    vk::ShaderStageFlags stage;
+    vk::DescriptorType type;
+};
 
 struct ShaderConstant
 {
@@ -12,13 +19,10 @@ struct ShaderConstant
 };
 
 struct ConstantTable
+    : public ShaderResource
 {
-    void Merge(const ConstantTable &source);
-
     std::map<std::string, ShaderConstant> constants;
-    std::size_t table_size;
-    std::uint32_t set;
-    std::uint32_t binding;
+    std::size_t size;
 };
 
 #endif // RESOURCES_CONSTANT_TABLE_H_
