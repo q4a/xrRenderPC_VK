@@ -34,12 +34,14 @@ public:
     ShaderElement *shader_element; ///< Compilation target
     ShaderElementType current_element; ///< Compilation target stage
     ShaderPass pass; ///< Intermediate pass data
-    ConstantTable constant_table; ///< Uniforms. One buffer for two passes
+    std::map<std::string, ShaderResource> resources;
 
     std::shared_ptr<Blender> blender;
     bool detail = false;
 
 private:
+    void MergeConstants(const std::map<std::string, ShaderResource> &);
+    vk::PipelineLayout CreatePipelineLayout() const;
     void CreatePipeline();
 };
 

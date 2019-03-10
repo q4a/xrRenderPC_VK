@@ -62,6 +62,23 @@ BlenderCompiler::Compile
     blender->Compile(*this);
 }
 
+
+void
+BlenderCompiler::MergeConstants
+        ( const std::map<std::string, ShaderResource> &shader_resources
+        )
+{
+    for (const auto &[name, constant] : shader_resources)
+    {
+        const auto &iterator = resources.find(name);
+        if (iterator == resources.cend())
+        {
+            resources.insert(std::make_pair(name, constant));
+        }
+    }
+}
+
+
 void
 BlenderCompiler::PassBegin
         ( const std::string &vertex_shader
@@ -75,8 +92,8 @@ BlenderCompiler::PassBegin
     pass.fragment_shader =
         frontend.resources_->CreateFragmentShader(fragment_shader);
 
-    constant_table.Merge(pass.vertex_shader->constant_table);
-    constant_table.Merge(pass.fragment_shader->constant_table);
+    MergeConstants(pass.vertex_shader->constants);
+    MergeConstants(pass.fragment_shader->constants);
 }
 
 
@@ -86,8 +103,9 @@ BlenderCompiler::PassTexture
         , const std::string &texture_name
         )
 {
-    std::string texture{ texture_name };
-    //const auto &iterator = textures.find(texture);
+    const auto &iterator = resources.find(resource_name);
+    VERIFY(iterator != resources.cend());
+    VERIFY(iterator->second.type == vk::DescriptorType::eSampledImage);
 }
 
 
@@ -123,6 +141,39 @@ BlenderCompiler::PassEnd()
     shader_element->shader_passes.push_back(pass_ptr);
 }
 
+
+/*!
+ */
+vk::PipelineLayout
+BlenderCompiler::CreatePipelineLayout() const
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings;
+
+    for (const auto &resource : resources)
+    {
+        auto binding = vk::DescriptorSetLayoutBinding()
+            .setBinding(resource.second.binding)
+            .setDescriptorType(resource.second.type)
+            .setDescriptorCount(1)
+            .setStageFlags(resource.second.stage);
+
+        bindings.push_back(binding);
+    }
+
+    const auto descriptors_layout_create_info =
+        vk::DescriptorSetLayoutCreateInfo()
+            .setPBindings(bindings.data())
+            .setBindingCount(bindings.size());
+    const auto descriptors_layout =
+        hw.device->createDescriptorSetLayout(descriptors_layout_create_info);
+
+
+    const auto layout_create_info = vk::PipelineLayoutCreateInfo()
+        .setPSetLayouts(&descriptors_layout)
+        .setSetLayoutCount(1);
+
+    return hw.device->createPipelineLayout(layout_create_info);
+}
 
 /*!
  * \brief   Create GPO for current render pass
@@ -188,12 +239,12 @@ BlenderCompiler::CreatePipeline()
         .setPScissors(&scissor);
 
     // Create the pipeline
-    const auto &pipeline_layout = vk::PipelineLayout(); // TODO
+    const auto layout = CreatePipelineLayout();
 
     pipeline_create_info
         .setStageCount(shader_stages.size())
         .setPStages(shader_stages.data())
-        .setLayout(pipeline_layout)
+        .setLayout(layout)
         .setRenderPass({}) // It's easy since we have only one render pass
         .setSubpass(0); // This one is hardest
 
