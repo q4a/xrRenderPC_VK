@@ -34,15 +34,9 @@ public:
     ShaderElement *shader_element; ///< Compilation target
     ShaderElementType current_element; ///< Compilation target stage
     ShaderPass pass; ///< Intermediate pass data
-    std::map<std::string, ShaderResource> pass_resources;
 
     std::shared_ptr<Blender> blender;
     bool detail = false;
-
-private:
-    void MergeConstants(const std::map<std::string, ShaderResource> &);
-    vk::PipelineLayout CreatePipelineLayout() const;
-    void CreatePipeline();
 };
 
 #endif // RESOURCES_BLENDER_COMPILER_H_
