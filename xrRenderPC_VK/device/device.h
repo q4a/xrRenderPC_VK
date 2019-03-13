@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 
+#include <gli/gli.hpp>
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <vk_mem_alloc.h>
@@ -18,6 +19,7 @@ class Hw
     , public pureAppDeactivate
 {
     friend class StreamBuffer;
+    friend class StreamImage;
 
     void CreateInstance();
     void SelectGpu();
@@ -41,11 +43,14 @@ class Hw
     BufferPtr CreateGpuBuffer( std::size_t size
                              , BufferType type
                              ) const;
-    void Transfer( BufferPtr &dst
-                 , BufferPtr &src
+    ImagePtr CreateGpuImage(const gli::texture &image_description) const;
+
+    void Transfer( BufferPtr &destination
+                 , const BufferPtr &source
                  , std::size_t offset
                  , std::size_t size
                  ) const;
+    void Transfer( ImagePtr &destination, const BufferPtr &source );
 
 public:
     struct SwapchainResource
