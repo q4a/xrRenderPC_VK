@@ -272,13 +272,13 @@ Hw::Transfer
 
     cmd_buffer->begin(buffer_begin_info);
 
-    // Change image layout
+    // Change image layout to transfer
     const auto &subresource_range = vk::ImageSubresourceRange()
         .setAspectMask(vk::ImageAspectFlagBits::eColor)
         .setLevelCount(destination->level_count)
         .setLayerCount(destination->layer_count);
 
-    const auto &memory_barrier = vk::ImageMemoryBarrier()
+    auto &memory_barrier = vk::ImageMemoryBarrier()
         .setSubresourceRange(subresource_range)
         .setOldLayout(vk::ImageLayout::eUndefined)
         .setNewLayout(vk::ImageLayout::eTransferDstOptimal)
@@ -299,6 +299,22 @@ Hw::Transfer
                                  , vk::ImageLayout::eTransferDstOptimal
                                  , { image_region }
     );
+
+    // Change image layout to shader read
+    memory_barrier
+        .setOldLayout(vk::ImageLayout::eTransferDstOptimal)
+        .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+        .setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+        .setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+
+    cmd_buffer->pipelineBarrier( vk::PipelineStageFlagBits::eTransfer
+                               , vk::PipelineStageFlagBits::eFragmentShader
+                               , {} // no dependencies
+                               , {} // no barriers
+                               , {} // no buffer barriers
+                               , { memory_barrier }
+    );
+
     cmd_buffer->end();
 
     // Submit the buffer
