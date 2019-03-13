@@ -45,6 +45,7 @@ public:
     std::uint32_t level_count; // mipmap levels
     vk::Extent3D dimensions;
     VkImage image;
+    vk::UniqueImageView view;
 };
 
 using ImagePtr = std::unique_ptr<DeviceImage>;

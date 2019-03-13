@@ -239,6 +239,20 @@ Hw::CreateGpuImage
                   , nullptr
     );
 
+    // Create image view
+    const auto &subresource_range = vk::ImageSubresourceRange()
+        .setAspectMask(vk::ImageAspectFlagBits::eColor)
+        .setLayerCount(image->layer_count)
+        .setLevelCount(image->level_count);
+
+    const auto &view_create_info = vk::ImageViewCreateInfo()
+        .setImage(vk::Image{ image->image })
+        .setViewType(vk::ImageViewType::e2D)
+        .setFormat(vk::Format{ image_description.format() })
+        .setSubresourceRange(subresource_range);
+
+    image->view = device->createImageViewUnique(view_create_info);
+
     return image;
 }
 
