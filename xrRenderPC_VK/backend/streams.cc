@@ -52,6 +52,41 @@ StreamBuffer::Sync()
 }
 
 
+/*!
+ * \brief   The only image stream class constructor
+ *
+ * \param [in] data pointer to image data
+ * \param [in] size size of image in memory
+ */
+StreamImage::StreamImage
+        ( void        *data
+        , std::size_t  size
+        )
+{
+    const auto &texture = gli::load(static_cast<char *>(data), size);
+
+    cpu_buffer_ = hw.CreateCpuBuffer(texture.size());
+
+    // copy the data into staging buffer
+    CopyMemory( cpu_buffer_->allocation_info.pMappedData
+              , texture.data()
+              , texture.size()
+    );
+
+    gpu_image_ = hw.CreateGpuImage(texture);
+}
+
+
+/*!
+ * \brief   Transfers host data into device memory
+ */
+void
+StreamImage::Sync()
+{
+    hw.Transfer(gpu_image_, cpu_buffer_);
+}
+
+
 /**
  *
  */

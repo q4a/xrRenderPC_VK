@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include <gli/gli.hpp>
+
 #include "device/memory.h"
 
 struct BufferStride
@@ -39,26 +41,16 @@ public:
 };
 
 
-class StreamBuffer
+struct StreamBuffer
 {
-public:
-    enum class ControlCode
-    {
-        Reset,
-        Flush,
-        DiscardCache
-    };
-
     explicit StreamBuffer( std::size_t size
                          , BufferType type
                          );
     void Create();
     void Sync();
 
-private:
     BufferType  type_;
     BufferPtr   gpu_buffer_;
-protected:
     BufferPtr   cpu_buffer_;
 
     std::size_t size_     = 0;
@@ -66,13 +58,32 @@ protected:
     std::size_t position_ = 0;
 };
 
-using StreamControl = StreamBuffer::ControlCode;
+
+struct StreamImage
+{
+public:
+    explicit StreamImage(void *data, std::size_t size);
+    void Sync();
+
+    ImagePtr  gpu_image_;
+    BufferPtr cpu_buffer_;
+};
+
+
+enum class StreamControl
+{
+    Reset,
+    Flush,
+    DiscardCache
+};
+
 
 template <class T>
 class DataStream
     : public StreamBuffer
 {
 public:
+
     explicit DataStream<T>(std::size_t size);
 
     DataStream &operator <<(const BufferStride &&value)
@@ -117,7 +128,6 @@ public:
         return *this;
     }
 };
-
 
 struct VertexStream;
 struct IndexStream;
