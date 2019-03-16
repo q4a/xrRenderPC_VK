@@ -8,6 +8,7 @@ struct Caps
     // Physical device
     vk::PhysicalDeviceProperties deviceProperties;
     vk::PhysicalDeviceDriverPropertiesKHR driverProps;
+    vk::PhysicalDeviceFeatures device_features;
     vk::PhysicalDeviceMemoryProperties memoryProps;
 
     // WSI Surface

@@ -115,6 +115,8 @@ Hw::SelectGpu()
        , caps.deviceProperties.deviceName
     );
 
+    caps.device_features = gpu_.getFeatures();
+
     // TODO: driver properties?
 
     caps.memoryProps = gpu_.getMemoryProperties();

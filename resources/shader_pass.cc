@@ -1,5 +1,7 @@
+#include "backend/backend.h"
 #include "device/device.h"
 #include "resources/manager.h"
+#include "frontend/render.h"
 
 #include "resources/shader_pass.h"
 
@@ -23,14 +25,14 @@ static vk::PipelineRasterizationStateCreateInfo state__rasterization =
 {};
 static vk::PipelineMultisampleStateCreateInfo state__multisampling =
 {};
-static vk::PipelineColorBlendStateCreateInfo state__color_blend =
-{};
 static vk::PipelineDynamicStateCreateInfo state__dynamic =
 {};
 
 /*!
  * Pipeline shared stencils
  */
+vk::PipelineColorBlendStateCreateInfo state__color_blend =
+{};
 vk::PipelineDepthStencilStateCreateInfo state__depth_stencil =
 {};
 
@@ -170,11 +172,11 @@ ShaderPass::AllocateDescriptors()
         .setPoolSizeCount(pool_sizes.size());
     auto descriptor_pool = hw.device->createDescriptorPool(pool_create_info);
 
-    const auto &layout = descriptors_layout; // for const cast
+    std::vector<vk::DescriptorSetLayout> layouts(1, descriptors_layout); // for const cast
     const auto descriptor_set_allocate_info = vk::DescriptorSetAllocateInfo()
         .setDescriptorPool(descriptor_pool)
-        .setDescriptorSetCount(1)
-        .setPSetLayouts(&layout);
+        .setDescriptorSetCount(layouts.size())
+        .setPSetLayouts(layouts.data());
     descriptors =
         hw.device->allocateDescriptorSets(descriptor_set_allocate_info);
 }
@@ -245,12 +247,31 @@ ShaderPass::CreatePipeline()
         .setScissorCount(1)
         .setPScissors(&scissor);
 
+    //***
+    state__rasterization.lineWidth = 1.f;
+    state__rasterization.polygonMode = vk::PolygonMode::eFill;
+    //state__rasterization.frontFace = vk::FrontFace::eClockwise;
+
+
+    const auto cblend_att = vk::PipelineColorBlendAttachmentState()
+        .setBlendEnable(false)
+        .setColorWriteMask(vk::ColorComponentFlagBits::eA
+            | vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+            | vk::ColorComponentFlagBits::eB);
+
+
+    state__color_blend.attachmentCount = 1;
+    state__color_blend.pAttachments = &cblend_att;
+    
+    
+    //***
+
     // Create the pipeline
     pipeline_create_info
         .setStageCount(shader_stages.size())
         .setPStages(shader_stages.data())
         .setLayout(pipeline_layout)
-        .setRenderPass(/*frontend.render_pass_.get()*/nullptr)
+        .setRenderPass(backend.render_pass.get())
         .setSubpass(0) // This one is hardest to identify
         .setBasePipelineIndex(-1);
 
