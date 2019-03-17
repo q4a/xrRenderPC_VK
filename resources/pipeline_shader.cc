@@ -556,22 +556,7 @@ ResourceManager::CompileShader
         options.SetTargetEnvironment(
             shaderc_target_env::shaderc_target_env_vulkan, 1);
         options.SetIncluder(std::make_unique<Includer>());
-
         options.SetAutoBindUniforms(true);
-
-        /* Since we have separate modules compilation and DX shaders
-         * do not have hints to determine constant set and binding,
-         * we split bindig ranges in accordance to the common headers
-         * content.
-         */
-        constexpr auto max_ubos = 4; // samplers go here
-        options.SetBindingBase(
-            shaderc_uniform_kind::shaderc_uniform_kind_sampler, max_ubos
-        );
-        // separate textures have the same binding as samplers
-        options.SetBindingBase(
-            shaderc_uniform_kind::shaderc_uniform_kind_texture, max_ubos
-        );
 
         const char *source_ptr = static_cast<const char *>(rsource->pointer());
         shaderc::CompilationResult output =
