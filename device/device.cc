@@ -134,12 +134,17 @@ Hw::CreateLogicalDevice()
     R_ASSERT(graphicsQfamilyIdx == presentQfamilyIdx);
 
     const float graphicsQpriority = 0.0f;
-    const auto deviceQueueCreateInfo = vk::DeviceQueueCreateInfo()
+    const auto &deviceQueueCreateInfo = vk::DeviceQueueCreateInfo()
         .setQueueCount(1)
         .setPQueuePriorities(&graphicsQpriority)
         .setQueueFamilyIndex(graphicsQfamilyIdx);
 
-    const auto deviceCreateInfo = vk::DeviceCreateInfo()
+    // Enable anisotropic filtering
+    const auto &device_features = vk::PhysicalDeviceFeatures()
+        .setSamplerAnisotropy(caps.device_features.samplerAnisotropy);
+
+    const auto &deviceCreateInfo = vk::DeviceCreateInfo()
+        .setPEnabledFeatures(&device_features)
         .setPQueueCreateInfos(&deviceQueueCreateInfo)
         .setQueueCreateInfoCount(1)
         .setEnabledExtensionCount(deviceExtensions.size())
