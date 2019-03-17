@@ -6,9 +6,9 @@
 
 #include "xrCore/FileCRC32.h"
 
-#include <spirv_cross.hpp>
-#include <spirv_parser.hpp>
-#include <spirv_hlsl.hpp>
+#include "spirv-cross/spirv_cross.hpp"
+#include "spirv-cross/spirv_parser.hpp"
+#include "spirv-cross/spirv_hlsl.hpp"
 
 #include "device/device.h"
 #include "frontend/render.h"
@@ -16,6 +16,7 @@
 
 #include "resources/pipeline_shader.h"
 
+#pragma comment (lib, "shaderc_shared")
 
 /*!
  * \brief   Converts SPIR-V type into Vulkan's `VkFormat`
@@ -556,7 +557,6 @@ ResourceManager::CompileShader
             shaderc_target_env::shaderc_target_env_vulkan, 1);
         options.SetIncluder(std::make_unique<Includer>());
 
-        options.SetHlslFunctionality1(true);
         options.SetAutoBindUniforms(true);
 
         /* Since we have separate modules compilation and DX shaders
