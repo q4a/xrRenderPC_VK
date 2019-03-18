@@ -35,7 +35,7 @@ StreamBuffer::Sync()
 {
     R_ASSERT(offset_ + position_ <= size_);
 
-    const auto transfer_size = size_ - offset_ + position_;
+    const auto transfer_size = offset_ + position_;
     if (transfer_size == 0)
     {
         return;
@@ -73,7 +73,13 @@ StreamImage::StreamImage
               , texture.size()
     );
 
-    gpu_image_ = hw.CreateGpuImage(texture);
+    // Preserve some useful texture parameters
+    extent.width  = texture.extent().x;
+    extent.height = texture.extent().y;
+    extent.depth  = texture.extent().z;
+    format        = vk::Format(texture.format());
+
+    gpu_image_ = hw.CreateGpuImage(std::move(texture));
 }
 
 

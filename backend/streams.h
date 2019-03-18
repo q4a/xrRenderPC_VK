@@ -73,6 +73,9 @@ public:
 
     ImagePtr  gpu_image_;
     BufferPtr cpu_buffer_;
+
+    vk::Extent3D extent;
+    vk::Format   format;
 };
 
 
