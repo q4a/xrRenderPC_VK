@@ -73,13 +73,13 @@ StreamImage::StreamImage
               , texture.size()
     );
 
-    // Preserve some useful texture parameters
+    // TODO: already saved in `image` object
     extent.width  = texture.extent().x;
     extent.height = texture.extent().y;
     extent.depth  = texture.extent().z;
-    format        = vk::Format(texture.format());
 
     gpu_image_ = hw.CreateGpuImage(std::move(texture));
+    view       = gpu_image_->CreateView();
 }
 
 
@@ -100,9 +100,7 @@ template <>
 DataStream<VertexStream>::DataStream
         ( std::size_t size
         )
-    : StreamBuffer( size
-                  , BufferType::Vertex
-      )
+    : StreamBuffer(size, BufferType::Vertex)
 {
 }
 
@@ -114,8 +112,6 @@ template <>
 DataStream<IndexStream>::DataStream
         ( std::size_t size
         )
-    : StreamBuffer( size
-                  , BufferType::Index
-      )
+    : StreamBuffer(size, BufferType::Index)
 {
 }

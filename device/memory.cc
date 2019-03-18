@@ -64,6 +64,29 @@ DeviceImage::~DeviceImage()
 
 
 /*!
+ * \brief   Creates image view for the resource
+ */
+vk::ImageView
+DeviceImage::CreateView()
+{
+    // Create image view
+    const auto &subresource_range = vk::ImageSubresourceRange()
+        .setAspectMask(vk::ImageAspectFlagBits::eColor) // TODO
+        .setLayerCount(layers_count)
+        .setLevelCount(levels_count);
+
+    const auto &view_create_info = vk::ImageViewCreateInfo()
+        .setImage(vk::Image{ image })
+        .setViewType(vk::ImageViewType::e2D) // TODO
+        .setFormat(format)
+        .setSubresourceRange(subresource_range);
+
+    const auto view = hw.device->createImageView(view_create_info);
+    return view;
+}
+
+
+/*!
  * \brief   Allocates host memory
  *
  * \param [in] size buffer size
@@ -200,16 +223,17 @@ Hw::Transfer
  */
 ImagePtr
 Hw::CreateGpuImage
-        ( const gli::texture &image_description
+        ( const gli::texture &&image_description
         ) const
 {
     ImagePtr image =
         std::unique_ptr<DeviceImage>{ new DeviceImage { &allocator_ } };
 
-    image->layer_count = image_description.layers();
-    image->level_count = image_description.levels();
+    image->layers_count = image_description.layers();
+    image->levels_count = image_description.levels();
+    image->format       = vk::Format{ image_description.format() };
 
-    auto &dimensions = image->dimensions;
+    auto &dimensions = image->extent;
     dimensions.width  = image_description.extent().x;
     dimensions.height = image_description.extent().y;
     dimensions.depth  = image_description.extent().z;
@@ -218,9 +242,9 @@ Hw::CreateGpuImage
     image_create_info.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     image_create_info.extent        = dimensions;
     image_create_info.imageType     = VK_IMAGE_TYPE_2D; // TODO: take it from metadata
-    image_create_info.mipLevels     = image->level_count;
-    image_create_info.arrayLayers   = image->layer_count;
-    image_create_info.format        = (VkFormat)image_description.format();
+    image_create_info.mipLevels     = image->levels_count;
+    image_create_info.arrayLayers   = image->layers_count;
+    image_create_info.format        = (VkFormat)image->format;
     image_create_info.tiling        = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_create_info.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT
@@ -238,20 +262,6 @@ Hw::CreateGpuImage
                   , &image->allocation
                   , nullptr
     );
-
-    // Create image view
-    const auto &subresource_range = vk::ImageSubresourceRange()
-        .setAspectMask(vk::ImageAspectFlagBits::eColor)
-        .setLayerCount(image->layer_count)
-        .setLevelCount(image->level_count);
-
-    const auto &view_create_info = vk::ImageViewCreateInfo()
-        .setImage(vk::Image{ image->image })
-        .setViewType(vk::ImageViewType::e2D)
-        .setFormat(vk::Format{ image_description.format() })
-        .setSubresourceRange(subresource_range);
-
-    image->view = device->createImageViewUnique(view_create_info);
 
     return image;
 }
@@ -274,11 +284,11 @@ Hw::Transfer
 
     const auto &subresource_layout = vk::ImageSubresourceLayers()
         .setAspectMask(vk::ImageAspectFlagBits::eColor)
-        .setLayerCount(destination->layer_count);
+        .setLayerCount(destination->layers_count);
 
     const auto &image_region = vk::BufferImageCopy()
         .setImageSubresource(subresource_layout)
-        .setImageExtent(destination->dimensions);
+        .setImageExtent(destination->extent);
 
     // Start command buffer recording
     const std::size_t buffer_idx = 0;
@@ -289,8 +299,8 @@ Hw::Transfer
     // Change image layout to transfer
     const auto &subresource_range = vk::ImageSubresourceRange()
         .setAspectMask(vk::ImageAspectFlagBits::eColor)
-        .setLevelCount(destination->level_count)
-        .setLayerCount(destination->layer_count);
+        .setLevelCount(destination->levels_count)
+        .setLayerCount(destination->layers_count);
 
     auto &memory_barrier = vk::ImageMemoryBarrier()
         .setSubresourceRange(subresource_range)

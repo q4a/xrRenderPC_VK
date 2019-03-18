@@ -43,7 +43,7 @@ class Hw
     BufferPtr CreateGpuBuffer( std::size_t size
                              , BufferType type
                              ) const;
-    ImagePtr CreateGpuImage(const gli::texture &image_description) const;
+    ImagePtr CreateGpuImage(const gli::texture &&image_description) const;
 
     void Transfer( BufferPtr &destination
                  , const BufferPtr &source

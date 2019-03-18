@@ -65,7 +65,7 @@ struct StreamBuffer
 };
 
 
-struct StreamImage
+class StreamImage
 {
 public:
     explicit StreamImage(void *data, std::size_t size);
@@ -74,8 +74,8 @@ public:
     ImagePtr  gpu_image_;
     BufferPtr cpu_buffer_;
 
-    vk::Extent3D extent;
-    vk::Format   format;
+    vk::Extent3D extent; ///< Image dimensions
+    vk::ImageView view; ///< Resource view
 };
 
 

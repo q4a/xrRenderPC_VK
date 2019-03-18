@@ -37,15 +37,19 @@ using BufferPtr = std::unique_ptr<DeviceBuffer>;
 class DeviceImage
     : public DeviceAllocation
 {
+    friend class Hw;
+
+    std::uint32_t layers_count; ///< Color layers
+    std::uint32_t levels_count; ///< Mipmap levels
+    vk::Extent3D  extent; ///< Image dimensions
+    vk::Format    format; ///< Image format
 public:
     explicit DeviceImage(const VmaAllocator *allocator);
     ~DeviceImage();
 
-    std::uint32_t layer_count; // image layers
-    std::uint32_t level_count; // mipmap levels
-    vk::Extent3D dimensions;
+    vk::ImageView CreateView();
+
     VkImage image;
-    vk::UniqueImageView view;
 };
 
 using ImagePtr = std::unique_ptr<DeviceImage>;
