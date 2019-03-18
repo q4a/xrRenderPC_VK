@@ -6,6 +6,9 @@
 #include "backend/streams.h"
 #include "resources/shader.h"
 
+constexpr std::size_t triangles_per_quad    = 2;
+constexpr std::size_t vertices_per_triangle = 3;
+
 class BackEnd
 {
 public:

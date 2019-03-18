@@ -13,8 +13,6 @@ constexpr std::size_t vertex_buffer_size = 4096_Kb;
 constexpr std::size_t index_buffer_size  =  512_Kb;
 
 /* Quad index cache */
-constexpr std::size_t triangles_per_quad    =    2;
-constexpr std::size_t vertices_per_triangle =    3;
 constexpr std::size_t triangles_num         = 4096;
 constexpr std::size_t index_count           = triangles_num
                                               * triangles_per_quad

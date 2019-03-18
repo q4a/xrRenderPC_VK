@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Include/xrRender/FontRender.h"
+#include "xrEngine/GameFont.h"
 
 #include "resources/shader.h"
 
