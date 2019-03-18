@@ -23,7 +23,7 @@ ShaderElement::IsEqual
         // TODO
     }
 
-    return true;
+    return false; // Of course not
 }
 
 

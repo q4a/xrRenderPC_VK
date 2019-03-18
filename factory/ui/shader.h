@@ -9,6 +9,8 @@
 
 class fUIShader : public IUIShader
 {
+    friend class UiRender;
+
     std::shared_ptr<Shader> shader_;
 public:
     fUIShader() = default;
