@@ -30,10 +30,16 @@ class Index
         std::uint16_t index;
     } stride_data_;
 public:
-    explicit Index(std::uint16_t index)
+    Index() = default;
+    Index(std::uint16_t index)
         : BufferStride( sizeof(stride_data_)
                       , &stride_data_
           )
+    {
+        stride_data_.index = index;
+    }
+
+    void Set(std::uint16_t index)
     {
         stride_data_.index = index;
     }
