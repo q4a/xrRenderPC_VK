@@ -39,6 +39,7 @@ public:
     std::shared_ptr<Shader> CreateShader(const std::string &shader_name,
         const std::string &textures, const std::string &constants = {},
         const std::string &matrices = {});
+    void DestroyShader(std::shared_ptr<Shader> &shader);
 
     std::shared_ptr<ShaderElement> CreateShaderElement(const ShaderElement &element);
     std::shared_ptr<ShaderPass> CreateShaderPass(const ShaderPass &pass);

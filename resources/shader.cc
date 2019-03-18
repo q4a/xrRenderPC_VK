@@ -38,6 +38,18 @@ ResourceManager::CreateShader
 }
 
 
+void
+ResourceManager::DestroyShader
+        ( std::shared_ptr<Shader> &shader
+        )
+{
+    if (shader)
+    {
+        // TODO
+    }
+}
+
+
 /**
  *
  */

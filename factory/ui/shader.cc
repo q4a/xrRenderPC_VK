@@ -1,3 +1,5 @@
+#include "resources/manager.h"
+
 #include "factory/ui/shader.h"
 
 
@@ -18,11 +20,11 @@ fUIShader::Copy
  */
 void
 fUIShader::create
-        ( LPCSTR shaderName
-        , LPCSTR textureList
+        ( LPCSTR shader_name
+        , LPCSTR texture_list
         )
 {
-    // TBI
+    shader_ = resources.CreateShader(shader_name, texture_list);
 }
 
 /**
@@ -31,8 +33,7 @@ fUIShader::create
 bool
 fUIShader::inited()
 {
-    // TBI
-    return false;
+    return (shader_ != nullptr);
 }
 
 
@@ -42,5 +43,5 @@ fUIShader::inited()
 void
 fUIShader::destroy()
 {
-    // TBI
+    resources.DestroyShader(shader_);
 }
