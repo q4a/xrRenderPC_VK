@@ -48,6 +48,8 @@ public:
     VertexShaderPtr CreateVertexShader(const std::string &name);
     FragmentShaderPtr CreateFragmentShader(const std::string &name);
 
+    bool deferred_load = true;
+
 private:
     void ScriptingLoad();
     bool ScriptingHasShader(const std::string &shader_name);
@@ -83,6 +85,7 @@ private:
 private:
     CScriptEngine script_engine_;
 
+    std::map<std::string, std::shared_ptr<Texture>> textures_;
     TextureDescription texture_description_;
 
     VertexShaders   vertex_shaders_;
