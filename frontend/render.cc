@@ -44,112 +44,6 @@ FrontEnd::getShaderPath()
     return "r3" DELIMITER ""; // we're using R3 shaders
 }
 
-/**
- *
- */
-void
-FrontEnd::CreateCommandBuffers()
-{
-    const auto cmd_pool_create_info = vk::CommandPoolCreateInfo()
-        .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
-        .setQueueFamilyIndex(hw.graphicsQfamilyIdx);
-
-    cmd_pool_ = hw.device->createCommandPoolUnique(cmd_pool_create_info);
-
-    const auto cmd_buffers_count = hw.baseRt.size();
-    const auto cmd_buffer_alloc_info = vk::CommandBufferAllocateInfo()
-        .setCommandPool(cmd_pool_.get())
-        .setCommandBufferCount(cmd_buffers_count)
-        .setLevel(vk::CommandBufferLevel::ePrimary);
-    
-    draw_cmd_buffers_ =
-        hw.device->allocateCommandBuffersUnique(cmd_buffer_alloc_info);
-}
-
-
-/**
- *
- */
-void
-FrontEnd::DestroyCommandBuffers()
-{
-    for (auto& buffer : draw_cmd_buffers_)
-    {
-        buffer.reset();
-    }
-
-    cmd_pool_.reset();
-}
-
-
-/**
- *
- */
-void
-FrontEnd::CreateRenderPass()
-{
-    // A dummy render pass with one subpass only
-    // (no PP, deferred and other fancy stuff yet)
-
-    const auto color_attachment_description = vk::AttachmentDescription()
-        .setFormat(hw.caps.colorFormat)
-        .setLoadOp( psDeviceFlags.test(rsClearBB)
-                    ? vk::AttachmentLoadOp::eClear
-                    : vk::AttachmentLoadOp::eDontCare
-                  )
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
-    const auto color_attachment_reference = vk::AttachmentReference()
-        .setAttachment(0)
-        .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    const auto subpass = vk::SubpassDescription()
-        .setColorAttachmentCount(1)
-        .setPColorAttachments(&color_attachment_reference)
-        .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
-
-    const auto renderpass_create_info = vk::RenderPassCreateInfo()
-        .setAttachmentCount(1)
-        .setPAttachments(&color_attachment_description)
-        .setSubpassCount(1)
-        .setPSubpasses(&subpass);
-
-    renderpass_ = hw.device->createRenderPassUnique(renderpass_create_info);
-
-    // Attach SC images to render pass
-    for (auto& resource : hw.baseRt)
-    {
-        const auto framebuffer_create_info = vk::FramebufferCreateInfo()
-            .setRenderPass(renderpass_.get())
-            .setAttachmentCount(1)
-            .setPAttachments(&resource.imageView)
-            .setWidth(hw.draw_rect.width)
-            .setHeight(hw.draw_rect.height)
-            .setLayers(1); // not stereo
-
-        resource.frameBuffer =
-            hw.device->createFramebuffer(framebuffer_create_info);
-    }
-}
-
-
-/**
- *
- */
-void
-FrontEnd::DestroyRenderPass()
-{
-    for (auto& resource : hw.baseRt)
-    {
-        //resource.frameBuffer;
-    }
-    renderpass_.reset();
-}
-
 
 /**
  *
@@ -164,23 +58,6 @@ FrontEnd::Create
         )
 {
     hw.CreateDevice(hwnd);
-
-    CreateCommandBuffers();
-
-    CreateRenderPass();
-
-    // create semaphores
-    frame_semaphores_.resize(hw.baseRt.size());
-    for (auto& semaphore : frame_semaphores_)
-    {
-        semaphore = hw.device->createSemaphoreUnique({});
-    }
-
-    render_semaphores_.resize(hw.baseRt.size());
-    for (auto& semaphore : render_semaphores_)
-    {
-        semaphore = hw.device->createSemaphoreUnique({});
-    }
 }
 
 
@@ -190,10 +67,6 @@ FrontEnd::Create
 void
 FrontEnd::DestroyHW()
 {
-    DestroyRenderPass();
-
-    DestroyCommandBuffers();
-
     hw.DestroyDevice();
 }
 
@@ -267,38 +140,18 @@ FrontEnd::OnDeviceDestroy
 void
 FrontEnd::Begin()
 {
+    const auto frame_semaphore =
+        backend.frame_semaphores[current_image_].get();
+
     swapchain_state_ = hw.device->acquireNextImageKHR(
           hw.swapchain
         , std::numeric_limits<std::uint64_t>::max()
-        , frame_semaphores_[current_image_].get()
+        , frame_semaphore
         , nullptr
         , &current_image_
     );
 
-    auto& cmd_buffer = draw_cmd_buffers_[current_image_];
-    auto& swapchain_resource = hw.baseRt[current_image_];
-
-    const auto begin_info = vk::CommandBufferBeginInfo()
-        .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-    
-    cmd_buffer->begin(begin_info);
-
-    // Begin render pass
-    const auto renderpass_begin_info = vk::RenderPassBeginInfo()
-        .setRenderPass(renderpass_.get())
-        .setFramebuffer(swapchain_resource.frameBuffer)
-        .setRenderArea(vk::Rect2D( vk::Offset2D(0, 0)
-                                 , vk::Extent2D( hw.draw_rect.width
-                                               , hw.draw_rect.height
-        )));
-//        .setClearValueCount(1)
-//        .setPClearValues(&clearValue);
-
-    cmd_buffer->beginRenderPass( renderpass_begin_info
-                               , vk::SubpassContents::eInline
-    );
-
-    backend.OnFrameBegin();
+    backend.OnFrameBegin(current_image_);
 }
 
 
@@ -308,34 +161,23 @@ FrontEnd::Begin()
 void
 FrontEnd::End()
 {
-    backend.OnFrameEnd();
-
-    auto& cmd_buffer = draw_cmd_buffers_[current_image_];
-
-    cmd_buffer->endRenderPass();
-    cmd_buffer->end();
-
-    const vk::PipelineStageFlags wait_mask =
-        vk::PipelineStageFlagBits::eTransfer;
-    const auto submit_info = vk::SubmitInfo()
-        .setWaitSemaphoreCount(1)
-        .setPWaitDstStageMask(&wait_mask)
-        .setPWaitSemaphores(&frame_semaphores_[current_image_].get())
-        .setCommandBufferCount(1)
-        .setPCommandBuffers(&cmd_buffer.get())
-        .setSignalSemaphoreCount(1)
-        .setPSignalSemaphores(&render_semaphores_[current_image_].get());
-
-    hw.submission_q.submit(submit_info, {});
+    backend.OnFrameEnd(current_image_);
 
     // Presentation
+    const auto render_semaphore =
+        backend.render_semaphores[current_image_].get();
+
     const auto present_info = vk::PresentInfoKHR()
         .setWaitSemaphoreCount(1)
-        .setPWaitSemaphores(&render_semaphores_[current_image_].get())
+        .setPWaitSemaphores(&render_semaphore)
         .setSwapchainCount(1)
         .setPSwapchains(&hw.swapchain)
         .setPImageIndices(&current_image_);
     
     hw.submission_q.presentKHR(present_info);
     current_image_ = (current_image_ + 1) % hw.baseRt.size();
+
+    #ifdef DEBUG
+    hw.device->waitIdle();
+    #endif
 }

@@ -13,12 +13,6 @@ class FrontEnd
     : public IRender
     , public pureFrame
 {
-    void CreateCommandBuffers();
-    void DestroyCommandBuffers();
-
-    void CreateRenderPass();
-    void DestroyRenderPass();
-
 public:
     FrontEnd() = default;
     ~FrontEnd() = default;
@@ -169,13 +163,6 @@ protected:
 private:
     std::uint32_t current_image_ = 0;
     vk::Result swapchain_state_ = vk::Result::eSuccess;
-    std::vector<vk::UniqueSemaphore> frame_semaphores_;
-    std::vector<vk::UniqueSemaphore> render_semaphores_;
-
-    vk::UniqueCommandPool cmd_pool_;
-    std::vector<vk::UniqueCommandBuffer> draw_cmd_buffers_;
-
-    vk::UniqueRenderPass renderpass_;
 
 public:
     struct RenderOptions
