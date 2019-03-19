@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "backend/streams.h"
 
@@ -26,9 +27,13 @@ class Texture
         bool user    = false;
         bool loaded  = false; ///< Indicates that texture is already loaded
         bool staging = false; ///< Defer image uploading until pipeline binding
+        bool cycled  = false; ///< Cycled anitmation
     } flags;
 
-    void TextureLoad(const std::string &file_name);
+    std::uint32_t ms_per_frame; ///< Milliseconds per frame in animation sequence
+    std::vector<std::shared_ptr<StreamImage>> sequence_frames; ///< Animation frames
+
+    std::shared_ptr<StreamImage> TextureLoad(const std::string &file_name);
     void ApplyLoad();
 
     void ApplyTheora();

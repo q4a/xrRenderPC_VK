@@ -17,6 +17,8 @@
 - [ ] Make fixed descriptor set layout for all shader cases
 - [ ] Blender compiler is a Pipeline compiler. Should be renamed
 - [x] Create the RM statically, outside of front end scope
+- [ ] Resource destruction is total disaster
+- [ ] Unique resource creation is head ache too
 
 ### Back end
 

@@ -66,8 +66,19 @@ Texture::ApplyAvi()
 void
 Texture::ApplySequence()
 {
-    // TBI
-    R_ASSERT(false);
+    const auto frame = Device.dwTimeContinual / ms_per_frame;
+    const auto frames_count = sequence_frames.size();
+
+    if (flags.cycled)
+    {
+        R_ASSERT(false);
+    }
+    else
+    {
+        const auto frame_id = frame % frames_count;
+        image = sequence_frames[frame_id];
+    }
+    ApplyNormal();
 }
 
 
@@ -188,8 +199,38 @@ Texture::Load()
         /* Animation sequence
          */
 
+        auto rstream = FS.r_open(path);
+        R_ASSERT(rstream);
+
+        string256 buffer;
+        rstream->r_string(buffer, sizeof(buffer));
+
+        if (xr_stricmp(buffer, "cycled") == 0)
+        {
+            flags.cycled = true;
+            rstream->r_string(buffer, sizeof(buffer));
+        }
+
+        const std::uint32_t fps = atoi(buffer);
+        R_ASSERT(fps != 0);
+
+        ms_per_frame = 1000 / fps;
+
+        while (!rstream->eof())
+        {
+            rstream->r_string(buffer, sizeof(buffer));
+            _Trim(buffer);
+
+            if (buffer[0])
+            {
+                const auto &frame_data = TextureLoad(buffer);
+                sequence_frames.push_back(frame_data);
+            }
+        }
+
+        FS.r_close(rstream);
+
         type = TextureType::Sequence;
-        R_ASSERT2(false, "Animation sequence isn't supported yet");
     }
     else
     {
@@ -197,7 +238,7 @@ Texture::Load()
          */
 
         flags.staging = true; // use staging by default
-        TextureLoad(name);
+        image = TextureLoad(name);
 
         type = TextureType::Normal;
     }
@@ -211,7 +252,7 @@ Texture::Load()
 constexpr LPCSTR fallback_texture_name = "ed\\ed_not_existing_texture.dds";
 
 
-void
+std::shared_ptr<StreamImage>
 Texture::TextureLoad
         ( const std::string &name
         )
@@ -254,7 +295,7 @@ Texture::TextureLoad
     auto rstream = FS.r_open(path);
     R_ASSERT(rstream);
 
-    image =
+    auto resource =
         std::shared_ptr<StreamImage>{ new StreamImage{ rstream->pointer()
                                                      , (size_t)rstream->length()
                                                      }
@@ -264,7 +305,7 @@ Texture::TextureLoad
     {
         // If no staging option specified, load the image immediately.
         // Otherwise loading will be deferred until texture applied.
-        image->Sync();
+        resource->Sync();
     }
 
     // TODO: 3D, Cubemaps
@@ -276,4 +317,6 @@ Texture::TextureLoad
     );
 
     FS.r_close(rstream);
+
+    return resource;
 }
