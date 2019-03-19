@@ -48,9 +48,12 @@ fFontRender::OnRender
     // Check if owner object need to be initialized
     if (!(owner.uFlags & CGameFont::fsValid))
     {
-        const auto &ts = shader_->elements[0]->shader_passes[0]->textures; // todo backed query
-        const auto &t = ts.cbegin();
-        owner.vTS.set((int)t->second->image->extent.width, (int)t->second->image->extent.height);
+        const auto &texture = backend.GetActiveTexture(0);
+
+        const int width    = texture->image->extent.width;
+        const int height   = texture->image->extent.height;
+        
+        owner.vTS.set(width, height);
         owner.fTCHeight = owner.fHeight / float(owner.vTS.y);
         owner.uFlags |= CGameFont::fsValid;
     }
@@ -175,13 +178,12 @@ fFontRender::OnRender
 
         const auto num_vertices =
             (offset_end - offset_start) / vertex_format::TriangleList::size;
-        const auto num_elements =
-            vertices_per_triangle * num_vertices / triangles_per_quad;
+        const auto num_primitives = num_vertices / triangles_per_quad;
 
         if (num_vertices)
         {
             backend.SetGeometry(vertex_buffer, backend.index_cache);
-            backend.Draw(num_elements);
+            backend.DrawIndexed(num_primitives);
         }
     }
 }

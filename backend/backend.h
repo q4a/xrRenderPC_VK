@@ -25,7 +25,11 @@ public:
     void SetGeometry( DataStream<VertexStream> &vertices
                     , DataStream<IndexStream>  &indices
                     );
-    void Draw(std::uint32_t elements_count);
+    void SetGeometry( DataStream<VertexStream> &vertices );
+    void Draw(std::uint32_t primitives_count);
+    void DrawIndexed(std::uint32_t primitives_count);
+
+    std::shared_ptr<Texture> GetActiveTexture(std::size_t index) const;
 
     DataStream<VertexStream> vertex_stream;
     DataStream<IndexStream>  index_stream;
@@ -44,6 +48,9 @@ private:
 
     void CreateRenderPass();
     void DestroyRenderPass();
+
+    void BindVertexBuffer(DataStream<VertexStream> &vertices);
+    void BindIndexBuffer(DataStream<IndexStream> &indices);
 
     struct RenderState
     {
