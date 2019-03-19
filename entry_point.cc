@@ -5,7 +5,7 @@
 #include "factory/factory.h"
 #include "frontend/render.h"
 #include "resources/manager.h"
-#include "ui/render.h"
+#include "ui/ui_render.h"
 
 
 /*!

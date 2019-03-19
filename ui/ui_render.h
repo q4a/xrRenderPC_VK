@@ -3,8 +3,8 @@
  * \brief   UI renderer interface implementation
  */
 
-#ifndef UI_RENDER_H_
-#define UI_RENDER_H_
+#ifndef UI_UI_RENDER_H_
+#define UI_UI_RENDER_H_
 
 #include "Include/xrRender/UIRender.h"
 
@@ -43,4 +43,4 @@ public:
 
 extern UiRender ui;
 
-#endif // UI_RENDER_H_
+#endif // UI_UI_RENDER_H_

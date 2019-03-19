@@ -1,9 +1,14 @@
+/*!
+ * \file    ui_render.cc
+ * \brief   UI renderer interface implementation
+ */
+
 #include "backend/backend.h"
 #include "backend/vertex_formats.h"
 #include "device/device.h"
 #include "factory/ui/shader.h"
 
-#include "ui/render.h"
+#include "ui/ui_render.h"
 
 UiRender ui;
 
