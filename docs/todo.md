@@ -5,6 +5,7 @@
 - [ ] Remove static linkage of *vulkan-1.lib* and switch to function pointers (this may ruin fancy *vulkan.hpp* usage)
 - [ ] Switch from exceptions provided by *vulkan.hpp* to ret codes check
 - [ ] It seems that `string_path` easily casts to `pcstr` and stream ifaces take `pcstr` as well. So get rid of this type legacy
+- [ ] Make assertions verbose (eliminate things like ``R_ASSERT(false)``)
 
 ### Front end
 
@@ -23,6 +24,7 @@
 ### Back end
 
 - [ ] Add statistics for buffers utilization (see ``stats_manager``)
+- [ ] [PERF] Load vertex attributes in separate buffers
 
 ### Memory allocation
 
