@@ -219,4 +219,8 @@ BackEnd::CreateIndexCache()
     }
 
     index_cache << StreamControl::Flush;
+
+    // A hack to avoid redundant flushes
+    // on pipeline geometry binding time
+    index_cache << StreamControl::Reset;
 }

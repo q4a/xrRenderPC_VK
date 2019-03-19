@@ -59,9 +59,9 @@ struct StreamBuffer
     BufferPtr   gpu_buffer_;
     BufferPtr   cpu_buffer_;
 
-    std::size_t size_     = 0;
-    std::size_t offset_   = 0;
-    std::size_t position_ = 0;
+    std::size_t size_     = 0; ///< total buffer size
+    std::size_t offset_   = 0; ///< absoulte offset of the open slice in buffer (dirty data)
+    std::size_t position_ = 0; ///< relative offset for the current write
 };
 
 
@@ -98,7 +98,7 @@ public:
     DataStream &operator <<(const BufferStride &&value)
     {
         const auto total_offset = offset_ + position_;
-        R_ASSERT(total_offset + value.size_ <= size_);
+        VERIFY(total_offset + value.size_ <= size_);
 
         std::uint8_t *cpu_buffer_ptr =
             static_cast<std::uint8_t*>(cpu_buffer_->allocation_info.pMappedData);

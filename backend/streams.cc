@@ -33,10 +33,10 @@ StreamBuffer::Create()
 void
 StreamBuffer::Sync()
 {
-    R_ASSERT(offset_ + position_ <= size_);
+    VERIFY(offset_ + position_ <= size_);
 
-    const auto transfer_size = offset_ + position_;
-    if (transfer_size == 0)
+    const auto transfer_size = position_;
+    if (transfer_size == 0) // no data
     {
         return;
     }
