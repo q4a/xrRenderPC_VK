@@ -46,6 +46,8 @@ public:
 
     std::shared_ptr<Texture> CreateTexture(const std::string &name);
 
+    std::shared_ptr<ConstantTable> CreateConstantTable(const ConstantTable &table);
+
     VertexShaderPtr CreateVertexShader(const std::string &name);
     FragmentShaderPtr CreateFragmentShader(const std::string &name);
 
@@ -96,10 +98,12 @@ private:
 
     using Shaders        = std::vector<std::shared_ptr<Shader>>;
     using ShaderElements = std::vector<std::shared_ptr<ShaderElement>>;
+    using ConstantTables = std::vector<std::shared_ptr<ConstantTable>>;
     using ShaderPasses   = std::vector<std::shared_ptr<ShaderPass>>;
 
     Shaders        shaders_;
     ShaderElements elements_;
+    ConstantTables tables_;
     ShaderPasses   shader_passes_;
 
     /* Content of `shaders.xr` library file */
