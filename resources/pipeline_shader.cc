@@ -119,7 +119,7 @@ PipelineShader::ParseResources()
     // TODO: Check for entry point and execution model
     // NOTE: in case of DX the entry point is `main` for ages (proof?)
 
-    const auto &resources = compiler.get_shader_resources();
+    const auto &shader_resources = compiler.get_shader_resources();
 
     // In case of vertex shader we need to additionaly create a vertex
     // format descriptor. It will used for vertex input stage description.
@@ -129,7 +129,7 @@ PipelineShader::ParseResources()
 
         std::uint32_t offset = 0;
 
-        const auto &inputs = resources.stage_inputs;
+        const auto &inputs = shader_resources.stage_inputs;
         for (const auto &input : inputs)
         {
             vk::VertexInputAttributeDescription vertex_input;
@@ -151,7 +151,7 @@ PipelineShader::ParseResources()
     }
 
     // Parse constants
-    for (const auto &ubo : resources.uniform_buffers)
+    for (const auto &ubo : shader_resources.uniform_buffers)
     {
         ConstantTable constant_buffer;
 
@@ -163,6 +163,8 @@ PipelineShader::ParseResources()
             compiler.get_decoration(ubo.id, spv::DecorationBinding);
         constant_buffer.set     =
             compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
+
+        std::uint32_t crc = 0;
 
         for ( auto member_index = 0
             ; member_index < type.member_types.size()
@@ -178,40 +180,47 @@ PipelineShader::ParseResources()
 
             const auto &name =
                 compiler.get_member_name(ubo.base_type_id, member_index);
-            constant_buffer.constants[name] = constant;
-        }
+            constant_buffer.members[name] = constant;
 
-        constants[ubo.name] = constant_buffer;
+            // Accumulate CRC
+            crc = _mm_crc32_u32( crc
+                               , crc32(&constant, sizeof(constant))
+            );
+        }
+        constant_buffer.crc = crc;
+
+        auto table = resources.CreateConstantTable(constant_buffer);
+        constants[ubo.name] = table;
     }
 
     // Parse samplers
-    for (const auto &sampler : resources.separate_samplers)
+    for (const auto &sampler : shader_resources.separate_samplers)
     {
-        ShaderResource sampler_resource;
+        auto sampler_resource = std::make_shared<ShaderResource>();
 
-        sampler_resource.type    = vk::DescriptorType::eSampler;
-        sampler_resource.stage   = stage;
-        sampler_resource.binding =
+        sampler_resource->type    = vk::DescriptorType::eSampler;
+        sampler_resource->stage   = stage;
+        sampler_resource->binding =
             compiler.get_decoration(sampler.id, spv::DecorationBinding);
-        sampler_resource.set     =
+        sampler_resource->set     =
             compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
 
-        constants[sampler.name] = sampler_resource;
+        samplers[sampler.name] = sampler_resource;
     }
 
     // Parse textures
-    for (const auto &texture : resources.separate_images)
+    for (const auto &texture : shader_resources.separate_images)
     {
-        ShaderResource texture_resource;
+        auto texture_resource = std::make_shared<ShaderResource>();
 
-        texture_resource.type    = vk::DescriptorType::eSampledImage;
-        texture_resource.stage   = stage;
-        texture_resource.binding =
+        texture_resource->type    = vk::DescriptorType::eSampledImage;
+        texture_resource->stage   = stage;
+        texture_resource->binding =
             compiler.get_decoration(texture.id, spv::DecorationBinding);
-        texture_resource.set     =
+        texture_resource->set     =
             compiler.get_decoration(texture.id, spv::DecorationDescriptorSet);
 
-        constants[texture.name] = texture_resource;
+        textures[texture.name] = texture_resource;
     }
 }
 
@@ -557,6 +566,20 @@ ResourceManager::CompileShader
             shaderc_target_env::shaderc_target_env_vulkan, 1);
         options.SetIncluder(std::make_unique<Includer>());
         options.SetAutoBindUniforms(true);
+
+        /* Since we have separate modules compilation and DX shaders
+         * do not have hints to determine constant set and binding,
+         * we split bindig ranges in accordance to the common headers
+         * content.
+         */
+        constexpr auto max_ubos = 4; // TODO: samplers go here
+        options.SetBindingBase(
+            shaderc_uniform_kind::shaderc_uniform_kind_sampler, max_ubos
+        );
+        // separate textures have the same binding as samplers
+        options.SetBindingBase(
+            shaderc_uniform_kind::shaderc_uniform_kind_texture, max_ubos
+        );
 
         const char *source_ptr = static_cast<const char *>(rsource->pointer());
         shaderc::CompilationResult output =

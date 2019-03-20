@@ -24,7 +24,11 @@ public:
 
     std::vector<std::uint32_t> spirv;
     vk::UniqueShaderModule module;
-    std::map<std::string, ShaderResource> constants;
+
+    // Parsed shader resources
+    std::map<std::string, std::shared_ptr<ConstantTable>>  constants;
+    std::map<std::string, std::shared_ptr<ShaderResource>> samplers;
+    std::map<std::string, std::shared_ptr<ShaderResource>> textures;
 };
 
 struct VertexShader
