@@ -1,6 +1,7 @@
 #ifndef RESOURCES_CONSTANT_TABLE_H_
 #define RESOURCES_CONSTANT_TABLE_H_
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -17,15 +18,17 @@ struct ShaderResource
     vk::DescriptorType type;
 };
 
-struct ShaderConstant
-{
-    std::size_t offset;
-    std::size_t size;
-};
 
 struct ConstantTable
     : public ShaderResource
 {
+    struct ShaderConstant
+    {
+        std::function<void(void)> Update;
+        std::size_t offset;
+        std::size_t size;
+    };
+
     bool IsEqual(const ConstantTable &reference) const;
 
     std::map<std::string, ShaderConstant> members;

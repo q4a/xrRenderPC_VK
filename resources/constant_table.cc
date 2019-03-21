@@ -49,7 +49,8 @@ ResourceManager::CreateConstantTable
  */
 bool
 ConstantTable::IsEqual
-        (const ConstantTable &reference) const
+        ( const ConstantTable &reference
+        ) const
 {
     if (size != reference.size)
     {

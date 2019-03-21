@@ -171,7 +171,7 @@ PipelineShader::ParseResources()
             ; member_index++
             )
         {
-            ShaderConstant constant;
+            ConstantTable::ShaderConstant constant;
 
             constant.offset =
                 compiler.type_struct_member_offset(type, member_index);
