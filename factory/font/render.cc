@@ -40,10 +40,15 @@ fFontRender::OnRender
         ( CGameFont &owner
         )
 {
-    if (shader_)
+    if (!shader_)
     {
-        backend.SetShader(shader_);
+        // TODO: possibly the FontRender will use nullptr to draw
+        //       new strings with old pipeline binding. If so we can
+        //       loose some text output.
+        return;
     }
+    
+    backend.SetShader(shader_);
 
     // Check if owner object need to be initialized
     if (!(owner.uFlags & CGameFont::fsValid))
