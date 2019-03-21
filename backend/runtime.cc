@@ -188,8 +188,18 @@ BackEnd::SetShader
 {
     // Update render state
     const auto &pass = shader->elements[0]->shader_passes[0];
+
+    if (state.pass == pass)
+    {
+        // Nothing to do. The pipeline is already binded.
+        return;
+    }
     state.pass = pass;
 
+    // TODO: in case when the shader has been binded before
+    //       the next descriptors update will break the command
+    //       buffer. Need to consider per-frame descriptors
+    //       update.
     UpdateDescriptors();
 
     auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
