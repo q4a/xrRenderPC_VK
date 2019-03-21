@@ -105,11 +105,10 @@ BackEnd::SetShader
     auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
 
     // Update descriptors = SetConstants + SetTextures
-    std::vector<vk::WriteDescriptorSet> update_info;
-    update_info.resize(pass->resources.size());
-
-    static std::vector<vk::DescriptorBufferInfo> buffers_info; // TODO: Should be per frame also? When exactly
-    static std::vector<vk::DescriptorImageInfo>  images_info;  //       this will be consumed by device?
+    std::vector<vk::WriteDescriptorSet> update_info(pass->resources.size());
+    vk::DescriptorBufferInfo buffer_info;
+    vk::DescriptorImageInfo  image_info;
+    vk::DescriptorImageInfo  sampler_info;
 
     auto i = 0;
     for (const auto &[name, resource] : pass->resources)
@@ -136,13 +135,11 @@ BackEnd::SetShader
                     member.Update();
                 }
 
-                vk::DescriptorBufferInfo buffer_info;
                 buffer_info.buffer =
                     vk::Buffer(buffer.buffers[state.frame_index]->gpu_buffer_->buffer);
                 buffer_info.range  = buffer.size;
 
-                buffers_info.push_back(std::move(buffer_info));
-                desc_write.pBufferInfo = &buffers_info.back();
+                desc_write.pBufferInfo = &buffer_info;
             }
             break;
         case vk::DescriptorType::eSampledImage:
@@ -154,12 +151,11 @@ BackEnd::SetShader
 
                 texture->Loader();
 
-                vk::DescriptorImageInfo info;
-                info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-                info.imageView = texture->image->view;
+                image_info.imageLayout =
+                    vk::ImageLayout::eShaderReadOnlyOptimal;
+                image_info.imageView = texture->image->view;
 
-                images_info.push_back(std::move(info));
-                desc_write.pImageInfo = &images_info.back();
+                desc_write.pImageInfo = &image_info;
             }
             break;
         case vk::DescriptorType::eSampler:
@@ -170,11 +166,11 @@ BackEnd::SetShader
                 const auto &sampler = iterator->second;
 
                 vk::DescriptorImageInfo info;
-                info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-                info.sampler = sampler.sampler;
+                sampler_info.imageLayout =
+                    vk::ImageLayout::eShaderReadOnlyOptimal;
+                sampler_info.sampler = sampler.sampler;
 
-                images_info.push_back(std::move(info));
-                desc_write.pImageInfo = &images_info.back();
+                desc_write.pImageInfo = &sampler_info;
             }
             break;
         }
