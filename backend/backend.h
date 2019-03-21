@@ -49,6 +49,7 @@ private:
     void CreateRenderPass();
     void DestroyRenderPass();
 
+    void UpdateDescriptors();
     void BindVertexBuffer(DataStream<VertexStream> &vertices);
     void BindIndexBuffer(DataStream<IndexStream> &indices);
 

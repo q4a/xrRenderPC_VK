@@ -95,28 +95,26 @@ BackEnd::GetActiveTexture
 }
 
 
+/*!
+ * \brief   Updates descriptors for current pipeline
+ */
 void
-BackEnd::SetShader
-        ( const std::shared_ptr<Shader> &shader
-        )
+BackEnd::UpdateDescriptors()
 {
-    const auto &pass = shader->elements[0]->shader_passes[0];
-    state.pass = pass;
-    auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
+    VERIFY(state.pass);
 
-    // Update descriptors = SetConstants + SetTextures
-    std::vector<vk::WriteDescriptorSet> update_info(pass->resources.size());
+    std::vector<vk::WriteDescriptorSet> update_info(state.pass->resources.size());
     vk::DescriptorBufferInfo buffer_info;
     vk::DescriptorImageInfo  image_info;
     vk::DescriptorImageInfo  sampler_info;
 
     auto i = 0;
-    for (const auto &[name, resource] : pass->resources)
+    for (const auto &[name, resource] : state.pass->resources)
     {
         const auto descriptor_type = resource->type;
 
         auto &desc_write = update_info[i];
-        desc_write.dstSet          = pass->descriptors[state.frame_index];
+        desc_write.dstSet          = state.pass->descriptors[state.frame_index];
         desc_write.dstBinding      = resource->binding;
         desc_write.descriptorType  = descriptor_type;
         desc_write.descriptorCount = 1;
@@ -145,8 +143,8 @@ BackEnd::SetShader
             break;
         case vk::DescriptorType::eSampledImage:
             {
-                const auto &iterator = pass->textures.find(name);
-                R_ASSERT(iterator != pass->textures.cend());
+                const auto &iterator = state.pass->textures.find(name);
+                VERIFY(iterator != state.pass->textures.cend());
 
                 const auto &texture = iterator->second;
 
@@ -161,8 +159,8 @@ BackEnd::SetShader
             break;
         case vk::DescriptorType::eSampler:
             {
-                const auto &iterator = pass->samplers.find(name);
-                R_ASSERT(iterator != pass->samplers.cend());
+                const auto &iterator = state.pass->samplers.find(name);
+                VERIFY(iterator != state.pass->samplers.cend());
 
                 const auto &sampler = iterator->second;
 
@@ -180,6 +178,21 @@ BackEnd::SetShader
     }
 
     hw.device->updateDescriptorSets(update_info, {});
+}
+
+
+void
+BackEnd::SetShader
+        ( const std::shared_ptr<Shader> &shader
+        )
+{
+    // Update render state
+    const auto &pass = shader->elements[0]->shader_passes[0];
+    state.pass = pass;
+
+    UpdateDescriptors();
+
+    auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
 
     // set shaders
     cmd_buffer->bindPipeline( vk::PipelineBindPoint::eGraphics
