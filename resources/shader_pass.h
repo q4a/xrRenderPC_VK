@@ -31,7 +31,7 @@ public:
 
     std::map<std::string, std::shared_ptr<ShaderResource>> resources; ///< resources gathered from shaders stages
 
-    std::map<std::string, std::shared_ptr<ConstantTable>> constants; ///<
+    std::map<std::string, std::shared_ptr<ConstantTable>> constants; ///< shader uniforms
     std::map<std::string, std::shared_ptr<Texture>>       textures; ///< textures requested by blender
     std::map<std::string, SamplerDescription>             samplers; ///< samplers requested by blender
 

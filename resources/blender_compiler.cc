@@ -272,6 +272,6 @@ BlenderCompiler::PassEnd()
     /* Register shader pass resource and add it
      * into parent shader element
      */
-    const auto pass_ptr = resources.CreateShaderPass(pass);
-    shader_element->shader_passes.push_back(pass_ptr);
+    const auto pass_resource = resources.CreateShaderPass(pass);
+    shader_element->shader_passes.push_back(pass_resource);
 }
