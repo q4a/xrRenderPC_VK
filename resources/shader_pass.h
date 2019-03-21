@@ -18,20 +18,22 @@ class ShaderPass
 public:
     bool IsEqual(const ShaderPass &pass) const;
 
-    void MergeConstants(const std::map<std::string, ShaderResource> &);
+    void MergeResources(const std::shared_ptr<PipelineShader> &shader);
     void CreatePipelineLayout();
     void AllocateDescriptors();
     void CreatePipeline();
 
     std::shared_ptr<VertexShader>   vertex_shader;
     std::shared_ptr<FragmentShader> fragment_shader;
-    std::map<std::string, ShaderResource> resources;
     vk::PipelineLayout pipeline_layout;
     vk::Pipeline pipeline;
     std::vector<vk::DescriptorSet> descriptors;
 
-    std::map<std::string, std::shared_ptr<Texture>> textures;
-    std::map<std::string, SamplerDescription> samplers;
+    std::map<std::string, std::shared_ptr<ShaderResource>> resources; ///< resources gathered from shaders stages
+
+    std::map<std::string, std::shared_ptr<ConstantTable>> constants; ///<
+    std::map<std::string, std::shared_ptr<Texture>>       textures; ///< textures requested by blender
+    std::map<std::string, SamplerDescription>             samplers; ///< samplers requested by blender
 
 private:
     vk::DescriptorSetLayout descriptors_layout;

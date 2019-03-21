@@ -1,3 +1,7 @@
+#include <vector>
+
+#include "device/device.h"
+#include "frontend/render.h"
 #include "backend/streams.h"
 
 #include "backend/backend.h"
@@ -6,10 +10,40 @@
  *
  */
 void
-BackEnd::OnFrameBegin()
+BackEnd::OnFrameBegin
+        ( std::uint32_t frame_index
+        )
 {
-    vertex_stream_ << StreamControl::Reset;
-    index_stream_  << StreamControl::Reset;
+    vertex_stream << StreamControl::Reset;
+    index_stream  << StreamControl::Reset;
+
+    auto& cmd_buffer = draw_cmd_buffers_[frame_index];
+    auto& swapchain_resource = hw.baseRt[frame_index];
+
+    const auto begin_info = vk::CommandBufferBeginInfo()
+        .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+    
+    cmd_buffer->begin(begin_info);
+
+    std::array<vk::ClearValue, 1> clear_values;
+    clear_values[0].color = vk::ClearColorValue(std::array<float, 4>{0.33f, 0.33f, 0.10f, 1.0f});
+
+    // Begin render pass
+    const auto renderpass_begin_info = vk::RenderPassBeginInfo()
+        .setRenderPass(render_pass.get())
+        .setFramebuffer(swapchain_resource.frameBuffer)
+        .setRenderArea(vk::Rect2D( vk::Offset2D(0, 0)
+                                 , vk::Extent2D( hw.draw_rect.width
+                                               , hw.draw_rect.height
+        )))
+        .setClearValueCount(clear_values.size())
+        .setPClearValues(clear_values.data());
+
+    cmd_buffer->beginRenderPass( renderpass_begin_info
+                               , vk::SubpassContents::eInline
+    );
+
+    state.frame_index = frame_index;
 }
 
 
@@ -17,8 +51,260 @@ BackEnd::OnFrameBegin()
  *
  */
 void
-BackEnd::OnFrameEnd()
+BackEnd::OnFrameEnd
+        ( std::uint32_t frame_index
+        )
 {
-    vertex_stream_ << StreamControl::Flush;
-    index_stream_  << StreamControl::Flush;
+    R_ASSERT(frame_index == state.frame_index);
+
+    auto& cmd_buffer = draw_cmd_buffers_[frame_index];
+
+    cmd_buffer->endRenderPass();
+    cmd_buffer->end();
+
+    const vk::PipelineStageFlags wait_mask =
+        vk::PipelineStageFlagBits::eTransfer;
+    const auto submit_info = vk::SubmitInfo()
+        .setWaitSemaphoreCount(1)
+        .setPWaitDstStageMask(&wait_mask)
+        .setPWaitSemaphores(&frame_semaphores[frame_index].get())
+        .setCommandBufferCount(1)
+        .setPCommandBuffers(&cmd_buffer.get())
+        .setSignalSemaphoreCount(1)
+        .setPSignalSemaphores(&render_semaphores[frame_index].get());
+
+    hw.submission_q.submit(submit_info, {});
+}
+
+
+std::shared_ptr<Texture>
+BackEnd::GetActiveTexture
+        ( std::size_t index
+        ) const
+{
+    VERIFY(state.pass);
+    VERIFY(index < state.pass->textures.size());
+
+    // TODO: textures in the map are sorted by name
+    //       not sure what exactly index means from
+    //       case to case
+    auto iterator = state.pass->textures.cbegin();
+    const auto &texture = std::next(iterator, index);
+
+    return texture->second;
+}
+
+
+void
+BackEnd::SetShader
+        ( const std::shared_ptr<Shader> &shader
+        )
+{
+    const auto &pass = shader->elements[0]->shader_passes[0];
+    state.pass = pass;
+    auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
+
+    // Update descriptors = SetConstants + SetTextures
+    std::vector<vk::WriteDescriptorSet> update_info;
+    update_info.resize(pass->resources.size());
+
+    static std::vector<vk::DescriptorBufferInfo> buffers_info; // TODO: Should be per frame also? When exactly
+    static std::vector<vk::DescriptorImageInfo>  images_info;  //       this will be consumed by device?
+
+    auto i = 0;
+    for (const auto &[name, resource] : pass->resources)
+    {
+        const auto descriptor_type = resource->type;
+
+        auto &desc_write = update_info[i];
+        desc_write.dstSet          = pass->descriptors[state.frame_index];
+        desc_write.dstBinding      = resource->binding;
+        desc_write.descriptorType  = descriptor_type;
+        desc_write.descriptorCount = 1;
+
+        switch (descriptor_type)
+        {
+        case vk::DescriptorType::eUniformBuffer:
+            {
+                // TODO: make this more elegant
+                auto &buffer =
+                    static_cast<ConstantTable&>(const_cast<ShaderResource &>(*resource));
+
+                // TODO: use cache. Do not update static data
+                for (auto &[name, member] : buffer.members)
+                {
+                    member.Update();
+                }
+
+                vk::DescriptorBufferInfo buffer_info;
+                buffer_info.buffer =
+                    vk::Buffer(buffer.buffers[state.frame_index]->gpu_buffer_->buffer);
+                buffer_info.range  = buffer.size;
+
+                buffers_info.push_back(std::move(buffer_info));
+                desc_write.pBufferInfo = &buffers_info.back();
+            }
+            break;
+        case vk::DescriptorType::eSampledImage:
+            {
+                const auto &iterator = pass->textures.find(name);
+                R_ASSERT(iterator != pass->textures.cend());
+
+                const auto &texture = iterator->second;
+
+                texture->Loader();
+
+                vk::DescriptorImageInfo info;
+                info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+                info.imageView = texture->image->view;
+
+                images_info.push_back(std::move(info));
+                desc_write.pImageInfo = &images_info.back();
+            }
+            break;
+        case vk::DescriptorType::eSampler:
+            {
+                const auto &iterator = pass->samplers.find(name);
+                R_ASSERT(iterator != pass->samplers.cend());
+
+                const auto &sampler = iterator->second;
+
+                vk::DescriptorImageInfo info;
+                info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+                info.sampler = sampler.sampler;
+
+                images_info.push_back(std::move(info));
+                desc_write.pImageInfo = &images_info.back();
+            }
+            break;
+        }
+
+        i++;
+    }
+
+    hw.device->updateDescriptorSets(update_info, {});
+
+    // set shaders
+    cmd_buffer->bindPipeline( vk::PipelineBindPoint::eGraphics
+                            , pass->pipeline
+    );
+
+    cmd_buffer->bindDescriptorSets( vk::PipelineBindPoint::eGraphics
+                                  , pass->pipeline_layout
+                                  , 0
+                                  , pass->descriptors[state.frame_index]
+                                  , {}
+    );
+}
+
+void
+BackEnd::SetGeometry
+        ( DataStream<VertexStream> &vertices
+        , DataStream<IndexStream>  &indices
+        )
+{
+    BindVertexBuffer(vertices);
+    BindIndexBuffer(indices);
+}
+
+
+void
+BackEnd::SetGeometry
+        ( DataStream<VertexStream> &vertices
+        )
+{
+    BindVertexBuffer(vertices);
+}
+
+
+/*!
+ * \brief   Binds vertex buffer to pipeline
+ * \param [in] vertices vertex stream to bind
+ *
+ * Flushes vertex buffer before binding and binds it starting from offset
+ * set by previous flush. The function updates render state.
+ */
+void
+BackEnd::BindVertexBuffer
+        ( DataStream<VertexStream> &vertices
+        )
+{
+    // Update render state
+    state.vertices = &vertices;
+
+    // Flush vertex buffer
+    const auto vertices_offset = vertices.offset_;
+    vertices << StreamControl::Flush;
+
+    // Bind it!
+    auto &cmd_buffer   = draw_cmd_buffers_[state.frame_index];
+    auto vertex_buffer = vk::Buffer(vertices.gpu_buffer_->buffer);
+    cmd_buffer->bindVertexBuffers( 0 // first binding
+                                 , { vertex_buffer }
+                                 , { vertices_offset }
+    );
+}
+
+
+/*!
+ * \brief   Binds index buffer to pipeline
+ * \param [in] indices index stream to bind
+ *
+ * Flushes index buffer before binding and binds it starting from offset
+ * set by previous flush. The function updates render state.
+ */
+void
+BackEnd::BindIndexBuffer
+        ( DataStream<IndexStream> &indices
+        )
+{
+    state.indices = &indices;
+
+
+    const auto indices_offset = indices.offset_;
+    indices << StreamControl::Flush;
+
+    auto &cmd_buffer  = draw_cmd_buffers_[state.frame_index];
+    auto index_buffer = vk::Buffer(indices.gpu_buffer_->buffer);
+    cmd_buffer->bindIndexBuffer( index_buffer
+                               , indices_offset
+                               , vk::IndexType::eUint16
+    );
+}
+
+
+/*!
+ * \brief   Draws triangles list
+ * \param [in] primitives_count amount of triangles in binded vertex buffer
+ *
+ * TODO: Need to support TS, lines and other topologies
+ */
+void
+BackEnd::Draw(std::uint32_t primitives_count)
+{
+    auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
+    cmd_buffer->draw( primitives_count * vertices_per_triangle
+                    , primitives_count
+                    , 0 // first vertex
+                    , 0 // first instance
+    );
+}
+
+
+/*!
+ * \brief   Draws indexed triangles list
+ * \param [in] primitives_count amount of triangles in binded vertex buffer
+ *
+ * TODO: Need to support TS, lines and other topologies
+ */
+void
+BackEnd::DrawIndexed(std::uint32_t primitives_count)
+{
+    auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
+    cmd_buffer->drawIndexed( primitives_count * vertices_per_triangle // amount of index elements
+                           , primitives_count
+                           , 0 // first index
+                           , 0 // vertex offset
+                           , 0 // first instance
+    );
 }
