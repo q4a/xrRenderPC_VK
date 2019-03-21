@@ -54,6 +54,7 @@ struct StreamBuffer
                          );
     void Create();
     void Sync();
+    void *GetHostPointer();
 
     BufferType  type_;
     BufferPtr   gpu_buffer_;

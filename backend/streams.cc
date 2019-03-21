@@ -53,6 +53,16 @@ StreamBuffer::Sync()
 
 
 /*!
+ * \brief   Return pointer to host mapped data
+ */
+void *
+StreamBuffer::GetHostPointer()
+{
+    return cpu_buffer_->allocation_info.pMappedData;
+}
+
+
+/*!
  * \brief   The only image stream class constructor
  *
  * \param [in] data pointer to image data

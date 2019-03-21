@@ -126,18 +126,19 @@ BackEnd::SetShader
         case vk::DescriptorType::eUniformBuffer:
             {
                 // TODO: make this more elegant
-                auto &buffer =
+                auto &constant_table =
                     static_cast<ConstantTable&>(const_cast<ShaderResource &>(*resource));
+                auto &buffer = constant_table.buffers[state.frame_index];
 
-                // TODO: use cache. Do not update static data
-                for (auto &[name, member] : buffer.members)
+                // Update UBO content
+                for (auto &[name, member] : constant_table.members)
                 {
                     member.Update();
                 }
 
                 buffer_info.buffer =
-                    vk::Buffer(buffer.buffers[state.frame_index]->gpu_buffer_->buffer);
-                buffer_info.range  = buffer.size;
+                    vk::Buffer(buffer->gpu_buffer_->buffer);
+                buffer_info.range  = constant_table.size;
 
                 desc_write.pBufferInfo = &buffer_info;
             }
