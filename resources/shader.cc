@@ -70,6 +70,7 @@ ResourceManager::CreateShaderCpp
     }
 
     shader = std::make_shared<Shader>();
+    shader->set_name(shader_name.c_str());
 
     // Initialize compiler
     BlenderCompiler compiler;
