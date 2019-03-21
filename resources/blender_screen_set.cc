@@ -253,6 +253,6 @@ ScreenSet::Compile
         break;
     }
 
-    compiler.PassLightingFog(lighting_.value, fog_.value);
+    compiler.PassLightFog(lighting_.value, fog_.value);
     compiler.PassEnd();
 }

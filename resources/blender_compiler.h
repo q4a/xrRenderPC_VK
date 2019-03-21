@@ -27,13 +27,17 @@ public:
     void PassZtest(bool z_test, bool z_write, bool invert_test = false);
     void PassBlend(bool alpha_blend, vk::BlendFactor blend_source, vk::BlendFactor blend_destination,
         bool alpha_test, u32 alpha_reference);
-    void PassAlphaBlendMode(bool, vk::BlendFactor, vk::BlendFactor);
-    void PassAlphaBlendKey(bool, u32);
-    void PassLightingFog(bool lighting, bool fog) {}
+    void PassLightFog(bool lighting, bool fog) {}
     void PassEnd();
 
+    // Blending control
+    void BlendAlphaMode(bool, vk::BlendFactor, vk::BlendFactor);
+    void BlendAlphaReference(bool alpha_test, std::uint32_t alpha_reference);
+    void BlendColorWriteMask(bool out_r, bool out_g, bool out_b, bool out_a);
+
     // Sampler control
-    void SamplerAddressing(const std::string &name, vk::SamplerAddressMode mode);
+    void SamplerAnisotropy(const std::string &sampler_name, bool enable);
+    void SamplerAddressing(const std::string &sampler_name, vk::SamplerAddressMode mode);
 
     std::vector<std::string> textures;
     std::vector<std::string> constants; // TODO: seems deprecated
@@ -45,8 +49,9 @@ public:
 
     std::shared_ptr<Blender> blender;
     bool detail = false;
+
 private:
-    void SetMapping();
+    void SetDefaultBindings(ConstantTable &table) const;
 };
 
 #endif // RESOURCES_BLENDER_COMPILER_H_

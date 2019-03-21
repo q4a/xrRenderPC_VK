@@ -7,6 +7,7 @@
 
 extern vk::PipelineColorBlendStateCreateInfo   state__color_blend;
 extern vk::PipelineDepthStencilStateCreateInfo state__depth_stencil;
+extern vk::PipelineColorBlendAttachmentState   color_blend_attachment;
 
 void
 BlenderCompiler::Compile
@@ -29,13 +30,39 @@ BlenderCompiler::PassBegin
         , const std::string &fragment_shader
         )
 {
+    /* Set default pass params
+     */
+    PassZtest( true // Z test
+             , true // Z write
+    );
+    PassBlend( false                    // Alpha blend
+             , vk::BlendFactor::eOne    // source factor
+             , vk::BlendFactor::eZero   // destination
+             , false                    // Alpha test
+             , 0                        // Alpha reference
+    );
+    PassLightFog( false // light
+                , false // fog
+    );
+
     /* Load and compile shaders
      */
     pass.vertex_shader   = resources.CreateVertexShader(vertex_shader);
     pass.fragment_shader = resources.CreateFragmentShader(fragment_shader);
 
-    pass.MergeConstants(pass.vertex_shader->constants);
-    pass.MergeConstants(pass.fragment_shader->constants);
+    pass.MergeResources(pass.vertex_shader);
+    pass.MergeResources(pass.fragment_shader);
+
+    if (fragment_shader == "null")
+    {
+        // If no fragment shader specified
+        // disable fragment output
+        BlendColorWriteMask( false // R
+                           , false // G
+                           , false // B
+                           , false // A
+        );
+    }
 }
 
 
@@ -47,7 +74,7 @@ BlenderCompiler::PassTexture
 {
     const auto &iterator = pass.resources.find(resource_name);
     VERIFY(iterator != pass.resources.cend());
-    VERIFY(iterator->second.type == vk::DescriptorType::eSampledImage);
+    VERIFY(iterator->second->type == vk::DescriptorType::eSampledImage);
 
     const auto &texture = resources.CreateTexture(texture_name);
     pass.textures[resource_name] = texture;
@@ -59,29 +86,23 @@ BlenderCompiler::PassSampler
         ( const std::string &resource_name
         )
 {
+    const auto &iterator = pass.resources.find(resource_name);
+    VERIFY(iterator != pass.resources.cend());
+    VERIFY(iterator->second->type == vk::DescriptorType::eSampler);
+
+    // Add sampler to pass
     SamplerDescription description;
+    pass.samplers[resource_name] = description;
 
     if (resource_name == "smp_base")
     {
-        if (hw.caps.device_features.samplerAnisotropy)
-        {
-            description.create_info.setAnisotropyEnable(true);
-            description.create_info.maxAnisotropy = 1.0f; // TODO: should be console variable
-        }
-        else
-        {
-            Msg("! Anisotropic filtering isn't supported by HW");
-        }
-        description.create_info.setAddressModeU(vk::SamplerAddressMode::eMirroredRepeat);
-        description.create_info.setAddressModeV(vk::SamplerAddressMode::eMirroredRepeat);
-        description.create_info.setAddressModeW(vk::SamplerAddressMode::eMirroredRepeat);
-    }
-    else
-    {
-        R_ASSERT(false);
+        SamplerAnisotropy(resource_name, true);
+        SamplerAddressing(resource_name, vk::SamplerAddressMode::eMirroredRepeat);
+        return;
     }
 
-    pass.samplers[resource_name] = description;
+    // TODO: handle all samplers
+    R_ASSERT(false);
 }
 
 
@@ -103,16 +124,72 @@ BlenderCompiler::SamplerAddressing
 
 
 void
-BlenderCompiler::PassAlphaBlendMode
-(bool alpha_blend, vk::BlendFactor, vk::BlendFactor)
+BlenderCompiler::SamplerAnisotropy
+        ( const std::string &sampler_name
+        , bool               enable
+        )
 {
+    const auto &iterator = pass.samplers.find(sampler_name);
+    R_ASSERT2(iterator != pass.samplers.cend(), "Unknown sampler resource");
 
+    if (enable && !hw.caps.device_features.samplerAnisotropy)
+    {
+        Msg("! Anisotropic filtering isn't supported by HW");
+        enable = false;
+    }
+
+    auto &description = iterator->second;
+    description.create_info.setAnisotropyEnable(enable);
+    description.create_info.maxAnisotropy = 1.0f; // TODO: should be console variable
+}
+
+
+void
+BlenderCompiler::BlendAlphaMode
+        ( bool alpha_blend
+        , vk::BlendFactor
+        , vk::BlendFactor
+        )
+{
+    // TBI
 }
 
 void
-BlenderCompiler::PassAlphaBlendKey(bool, u32 alpha_reference)
+BlenderCompiler::BlendAlphaReference
+        ( bool          alpha_test
+        , std::uint32_t alpha_reference
+        )
 {
-    //clamp(alpha_reference, 0u, 0u);
+    // TBI
+}
+
+
+void
+BlenderCompiler::BlendColorWriteMask
+        ( bool out_r
+        , bool out_g
+        , bool out_b
+        , bool out_a
+        )
+{
+    vk::ColorComponentFlags mask;
+    if (out_r)
+    {
+        mask |= vk::ColorComponentFlagBits::eR;
+    }
+    if (out_g)
+    {
+        mask |= vk::ColorComponentFlagBits::eG;
+    }
+    if (out_b)
+    {
+        mask |= vk::ColorComponentFlagBits::eB;
+    }
+    if (out_a)
+    {
+        mask |= vk::ColorComponentFlagBits::eA;
+    }
+    color_blend_attachment.colorWriteMask = mask;
 }
 
 
@@ -125,12 +202,12 @@ BlenderCompiler::PassBlend
         , u32             alpha_reference
         )
 {
-    PassAlphaBlendMode( alpha_blend
-                      , blend_source
-                      , blend_destination
+    BlendAlphaMode( alpha_blend
+                  , blend_source
+                  , blend_destination
     );
-    PassAlphaBlendKey( alpha_test
-                     , alpha_reference
+    BlendAlphaReference( alpha_test
+                       , alpha_reference
     );
 }
 
@@ -154,37 +231,32 @@ BlenderCompiler::PassZtest
     }
 }
 
-StreamBuffer ubo(512, BufferType::Uniform);
-
-void
-BlenderCompiler::SetMapping() // standard bindings
-{
-    // create ubo -- separate!
-    ubo.Create();
-    
-    
-    // update in backend set element
-    void *ptr = (void *)ubo.cpu_buffer_->allocation_info.pMappedData;
-    struct {
-        float w, h, w1, h1;
-    } abc;
-
-    abc.w = hw.draw_rect.width;
-    abc.h = hw.draw_rect.height;
-    abc.w1 = 1.0f / hw.draw_rect.width;
-    abc.h1 = 1.0f / hw.draw_rect.height;
-    memcpy(ptr, &abc, sizeof(abc));
-
-    ubo.position_ += sizeof(abc);
-    ubo.Sync();
-}
 
 void
 BlenderCompiler::PassEnd()
 {
-    // Create constant buffers
-    // TODO: rework me! I know how!
+    // Allocate constant buffers
+    for (auto &[name, constant] : pass.constants)
+    {
+        /* If multiple swapchain images used we can't bind
+         * the same UBO for all the frames: it may cause
+         * a racing between host-out DMA transfer on update
+         * and shader fetch. So we allocate one buffer object
+         * per frame.
+         */
+        for (auto index = 0; index < hw.baseRt.size(); index++)
+        {
+            auto buffer_pointer =
+                std::shared_ptr<StreamBuffer>{ new StreamBuffer{ constant->size
+                                                               , BufferType::Uniform
+                }};
 
+            buffer_pointer->Create();
+            constant->buffers.push_back(buffer_pointer);
+        }
+
+        SetDefaultBindings(*constant);
+    }
 
     // Create samplers objects
     for (auto &[name, description] : pass.samplers)
@@ -194,10 +266,8 @@ BlenderCompiler::PassEnd()
     }
 
     pass.CreatePipelineLayout();
-    //pass.AllocateDescriptors();
+    pass.AllocateDescriptors();
     pass.CreatePipeline();
-
-    SetMapping();
 
     /* Register shader pass resource and add it
      * into parent shader element

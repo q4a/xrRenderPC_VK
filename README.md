@@ -9,7 +9,7 @@ We are on the very early stage hence current code mostly consists of TODOs. Desp
 * Font render
 * Animated textures
 
-(Check for the latest [screenshot](docs/screenshot-19-Mar-2019.png) !)
+(Check for the latest [screenshot](docs/screenshot-19-Mar-2019.png))
 
 And upcoming functionality is:
 
