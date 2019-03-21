@@ -36,6 +36,8 @@ vk::PipelineColorBlendStateCreateInfo state__color_blend =
 vk::PipelineDepthStencilStateCreateInfo state__depth_stencil =
 {};
 
+vk::PipelineColorBlendAttachmentState color_blend_attachment =
+{};
 
 static vk::GraphicsPipelineCreateInfo pipeline_create_info =
 {
@@ -98,21 +100,46 @@ ResourceManager::CreateShaderPass
 
 
 void
-ShaderPass::MergeConstants
-        ( const std::map<std::string, ShaderResource> &shader_resources
+ShaderPass::MergeResources
+        ( const std::shared_ptr<PipelineShader> &shader
         )
 {
-    for (const auto &[name, constant] : shader_resources)
+    /* Merge constants
+     */
+    for (const auto &[name, constant] : shader->constants)
     {
-        const auto &iterator = resources.find(name);
-        if (iterator == resources.cend())
+        const auto &iterator = constants.find(name);
+        if (iterator == constants.cend())
         {
             resources.insert(std::make_pair(name, constant));
         }
         else
         {
-            R_ASSERT(false);
+            // TODO: only access to the same UBOs from several stages allowed
+            VERIFY(constant->IsEqual(*iterator->second));
+            iterator->second->stage |= constant->stage; // update binding point
         }
+        constants.insert(std::make_pair(name, constant));
+    }
+
+    /* Merge samplers
+     */
+    for (const auto &[name, sampler] : shader->samplers)
+    {
+        const auto &iterator = samplers.find(name);
+        VERIFY(iterator == samplers.cend()); // only unique are allowed
+
+        resources.insert(std::make_pair(name, sampler));
+    }
+
+    /* Merge textures
+     */
+    for (const auto &[name, texture] : shader->textures)
+    {
+        const auto &iterator = textures.find(name);
+        VERIFY(iterator == textures.cend()); // only unique are allowed
+
+        resources.insert(std::make_pair(name, texture));
     }
 }
 
@@ -128,10 +155,10 @@ ShaderPass::CreatePipelineLayout()
     for (const auto &resource : resources)
     {
         auto binding = vk::DescriptorSetLayoutBinding()
-            .setBinding(resource.second.binding)
-            .setDescriptorType(resource.second.type)
+            .setBinding(resource.second->binding)
+            .setDescriptorType(resource.second->type)
             .setDescriptorCount(1)
-            .setStageFlags(resource.second.stage);
+            .setStageFlags(resource.second->stage);
 
         bindings.push_back(binding);
     }
@@ -158,21 +185,23 @@ ShaderPass::AllocateDescriptors()
     std::vector<vk::DescriptorPoolSize> pool_sizes;
     pool_sizes.resize(resources.size());
 
+    const auto descriptors_count = hw.baseRt.size();
+
     auto i = 0;
     for (const auto &resource : resources)
     {
-        pool_sizes[i].type = resource.second.type;
-        pool_sizes[i].descriptorCount = 1; // TODO: need to count
+        pool_sizes[i].type = resource.second->type;
+        pool_sizes[i].descriptorCount = descriptors_count;
         i++;
     }
 
     const auto pool_create_info = vk::DescriptorPoolCreateInfo()
-        .setMaxSets(1)
+        .setMaxSets(descriptors_count)
         .setPPoolSizes(pool_sizes.data())
         .setPoolSizeCount(pool_sizes.size());
     auto descriptor_pool = hw.device->createDescriptorPool(pool_create_info);
 
-    std::vector<vk::DescriptorSetLayout> layouts(1, descriptors_layout); // for const cast
+    std::vector<vk::DescriptorSetLayout> layouts(descriptors_count, descriptors_layout); // for const cast
     const auto descriptor_set_allocate_info = vk::DescriptorSetAllocateInfo()
         .setDescriptorPool(descriptor_pool)
         .setDescriptorSetCount(layouts.size())
@@ -235,8 +264,8 @@ ShaderPass::CreatePipeline()
     // Viewport
     const auto viewport = vk::Viewport()
         .setWidth(hw.draw_rect.width)
-        .setHeight(hw.draw_rect.height);
-    // TODO: max depth!
+        .setHeight(hw.draw_rect.height)
+        .setMaxDepth(1.0f);
 
     const auto scissor = vk::Rect2D()
         .setExtent(hw.draw_rect);
@@ -248,20 +277,32 @@ ShaderPass::CreatePipeline()
         .setPScissors(&scissor);
 
     //***
+    state__rasterization.depthClampEnable = false;
+    state__rasterization.rasterizerDiscardEnable = false;
     state__rasterization.lineWidth = 1.f;
     state__rasterization.polygonMode = vk::PolygonMode::eFill;
-    //state__rasterization.frontFace = vk::FrontFace::eClockwise;
+    state__rasterization.frontFace = vk::FrontFace::eClockwise;
+    state__rasterization.cullMode = vk::CullModeFlagBits::eNone;
+    state__rasterization.depthBiasEnable = false;
 
+    state__multisampling.sampleShadingEnable = false;
+    state__multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    state__multisampling.minSampleShading = 1.0f;
 
-    const auto cblend_att = vk::PipelineColorBlendAttachmentState()
-        .setBlendEnable(false)
+    color_blend_attachment
+        .setBlendEnable(true)
+        .setAlphaBlendOp(vk::BlendOp::eAdd)
         .setColorWriteMask(vk::ColorComponentFlagBits::eA
             | vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-            | vk::ColorComponentFlagBits::eB);
+            | vk::ColorComponentFlagBits::eB)
+        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+        .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
 
-
+    state__color_blend.logicOp = vk::LogicOp::eCopy;
     state__color_blend.attachmentCount = 1;
-    state__color_blend.pAttachments = &cblend_att;
+    state__color_blend.pAttachments = &color_blend_attachment;
     
     
     //***
