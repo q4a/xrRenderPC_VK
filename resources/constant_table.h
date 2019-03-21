@@ -25,8 +25,9 @@ struct ConstantTable
     struct ShaderConstant
     {
         std::function<void(void)> Update;
-        std::size_t offset;
-        std::size_t size;
+        std::size_t   offset   = 0; ///< member offset in UBO
+        std::size_t   size     = 0; ///< member size
+        std::uint32_t crc      = 0; ///< data CRC for update check
     };
 
     bool IsEqual(const ConstantTable &reference) const;

@@ -15,25 +15,31 @@
  */
 void
 Update__screen_res
-        ( const ConstantTable                 &table
-        , const ConstantTable::ShaderConstant &member
+        ( const ConstantTable           &table
+        , ConstantTable::ShaderConstant &member
         )
 {
+    const glm::vec4 screen_res{ hw.draw_rect.width
+                              , hw.draw_rect.height
+                              , 1.0f / hw.draw_rect.width
+                              , 1.0f / hw.draw_rect.height
+    };
+    const auto crc = crc32(&screen_res, sizeof(screen_res));
+
+    if (crc == member.crc)
+    {
+        // No data changed. Skip transfering.
+        return;
+    }
+
     for (auto index = 0; index < hw.baseRt.size(); index++)
     {
         const auto &buffer = table.buffers[index];
-        void * const buffer_pointer =
-            buffer->cpu_buffer_->allocation_info.pMappedData;
+        std::uint8_t * const buffer_pointer =
+            static_cast<std::uint8_t *>(buffer->GetHostPointer());
 
-        glm::vec4 screen_res{ hw.draw_rect.width
-                            , hw.draw_rect.height
-                            , 1.0f / hw.draw_rect.width
-                            , 1.0f / hw.draw_rect.height
-        };
 
-        auto * const pointer =
-            static_cast<std::uint8_t *>(buffer_pointer) + member.offset;
-        CopyMemory( pointer
+        CopyMemory( buffer_pointer + member.offset
                   , &screen_res
                   , member.size
         );
@@ -44,6 +50,8 @@ Update__screen_res
         // reset buffer offset
         buffer->offset_ = 0;
     }
+
+    member.crc = crc;
 }
 
 
@@ -57,13 +65,10 @@ BlenderCompiler::SetDefaultBindings(ConstantTable &table) const
     const auto &screen_res = table.members.find("screen_res");
     if (screen_res != table.members.cend())
     {
-        void Update__screen_res( const ConstantTable &
-                               , const ConstantTable::ShaderConstant &
-                               );
         screen_res->second.Update =
             std::bind( Update__screen_res
                      , std::cref(table)
-                     , std::cref(screen_res->second)
+                     , std::ref(screen_res->second)
             );
     }
 }
