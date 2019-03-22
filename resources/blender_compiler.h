@@ -60,7 +60,11 @@ public:
     ShaderPass pass; ///< Intermediate pass data
 
     std::shared_ptr<Blender> blender;
-    bool detail = false;
+
+    bool detail   = false;
+    bool emissive = false;
+    bool distort  = false;
+    bool wallmark = false;
 
 private:
     void SetDefaultBindings(ConstantTable &table) const;
