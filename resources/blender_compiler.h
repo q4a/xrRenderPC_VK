@@ -3,6 +3,7 @@
 
 #include <array>
 #include <memory>
+#include <functional>
 #include <string>
 #include <vector>
 #include <utility>
@@ -20,8 +21,16 @@ constexpr std::size_t max_shader_stages = 2; ///< Vertex, Fragment
 class BlenderCompiler
 {
 public:
-    void Compile(ShaderElement &element);
-    void PassBegin(const std::string &vertex_shader, const std::string &fragment_shader);
+    std::shared_ptr<ShaderElement> Compile();
+    std::shared_ptr<ShaderElement>
+    CompileLua( const std::string &name_space
+              , const std::string &shader_name
+              );
+
+    void PassBegin( const std::string &vertex_shader
+                  , const std::string &geometry_shader
+                  , const std::string &fragment_shader
+                  );
     void PassTexture(const std::string &name, const std::string &texture);
     void PassSampler(const std::string &name);
     void PassZtest(bool z_test, bool z_write, bool invert_test = false);
@@ -39,11 +48,14 @@ public:
     void SamplerAnisotropy(const std::string &sampler_name, bool enable);
     void SamplerAddressing(const std::string &sampler_name, vk::SamplerAddressMode mode);
 
-    std::vector<std::string> textures;
+    std::vector<std::string> textures; ///< binded textures names
+    std::string detail_texture; ///< detail texture name
+    std::function<void()> detail_scaler; ///< detail scaler
+
     std::vector<std::string> constants; // TODO: seems deprecated
     std::vector<std::string> matrices; // TODO: seems deprecated
 
-    ShaderElement *shader_element; ///< Compilation target
+    std::shared_ptr<ShaderElement> shader_element; ///< Compilation target
     ShaderElementType current_element; ///< Compilation target stage
     ShaderPass pass; ///< Intermediate pass data
 

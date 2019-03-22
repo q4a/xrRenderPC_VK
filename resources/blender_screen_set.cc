@@ -146,18 +146,30 @@ ScreenSet::Compile
     switch (blend_.IDselected)
     {
     case MULTIPLY_2X_BD:
-        compiler.PassBegin("stub_notransform_t", "stub_default_ma");
+        compiler.PassBegin( "stub_notransform_t"
+                          , "null"
+                          , "stub_default_ma"
+        );
         break;
     case SET_2R:
         // no break
     case BLEND_2R:
-        compiler.PassBegin("stub_notransform_t_m2", "stub_default");
+        compiler.PassBegin( "stub_notransform_t_m2"
+                          , "null"
+                          , "stub_default"
+        );
         break;
     case BLEND_4R:
-        compiler.PassBegin("stub_notransform_t_m4", "stub_default");
+        compiler.PassBegin( "stub_notransform_t_m4"
+                          , "null"
+                          , "stub_default"
+        );
         break;
     default:
-        compiler.PassBegin("stub_notransform_t", "stub_default");
+        compiler.PassBegin( "stub_notransform_t"
+                          , "null"
+                          , "stub_default"
+        );
         break;
     };
 

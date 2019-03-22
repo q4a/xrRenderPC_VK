@@ -9,27 +9,32 @@ extern vk::PipelineColorBlendStateCreateInfo   state__color_blend;
 extern vk::PipelineDepthStencilStateCreateInfo state__depth_stencil;
 extern vk::PipelineColorBlendAttachmentState   color_blend_attachment;
 
-void
-BlenderCompiler::Compile
-        ( ShaderElement &element
-        )
+
+std::shared_ptr<ShaderElement>
+BlenderCompiler::Compile()
 {
     /* Store pointer to target element for further
      * updates while going through blender passes
      */
-    shader_element = &element;
+    shader_element = std::make_shared<ShaderElement>();
 
     // TBI
     blender->Compile(*this);
+    return resources.CreateShaderElement(*shader_element);
 }
 
 
 void
 BlenderCompiler::PassBegin
         ( const std::string &vertex_shader
+        , const std::string &geometry_shader
         , const std::string &fragment_shader
         )
 {
+    pass.constants.clear();
+    pass.samplers.clear();
+    pass.textures.clear();
+
     /* Set default pass params
      */
     PassZtest( true // Z test
@@ -48,6 +53,10 @@ BlenderCompiler::PassBegin
     /* Load and compile shaders
      */
     pass.vertex_shader   = resources.CreateVertexShader(vertex_shader);
+    if (geometry_shader != "null")
+    {
+        R_ASSERT2(false, "Geometry shaders aren't supported yet");
+    }
     pass.fragment_shader = resources.CreateFragmentShader(fragment_shader);
 
     pass.MergeResources(pass.vertex_shader);

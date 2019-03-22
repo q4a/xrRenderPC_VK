@@ -11,6 +11,10 @@ enum class ShaderElementType
 {
     NormalHq,
     NormalLq,
+    LightPoint,
+    LightSpot,
+    LightSpecial,
+    Unknown
 };
 
 enum class ShaderPassType

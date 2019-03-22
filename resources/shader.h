@@ -14,6 +14,8 @@ class Shader
     : public xr_resource_named
 {
 public:
+    bool IsEqual(const Shader& reference) const;
+
     std::array<std::shared_ptr<ShaderElement>, max_elements> elements;
 };
 

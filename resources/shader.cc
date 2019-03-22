@@ -4,6 +4,21 @@
 #include "resources/shader.h"
 
 
+/*!
+ * \brief   Compares two shader objects
+ * \param [in] reference shader to compare with
+ * \return result
+ */
+bool
+Shader::IsEqual
+        ( const Shader &reference
+        ) const
+{
+    return false;
+}
+
+
+
 /**
  *
  */
@@ -61,16 +76,13 @@ ResourceManager::CreateShaderCpp
         , const std::string &matrices
         )
 {
-    std::shared_ptr<Shader> shader;
+    std::shared_ptr<Shader> shader_resource;
 
     auto blender = GetBlender(shader_name);
-    if (!blender)
-    {
-        return shader; // null
-    }
+    VERIFY(blender);
 
-    shader = std::make_shared<Shader>();
-    shader->set_name(shader_name.c_str());
+    shader_resource = std::make_shared<Shader>();
+    shader_resource->set_name(shader_name.c_str());
 
     // Initialize compiler
     BlenderCompiler compiler;
@@ -80,23 +92,78 @@ ResourceManager::CreateShaderCpp
     ParseList(matrices,  compiler.matrices);
 
     compiler.blender = blender;
-    compiler.detail  = false; // TODO
 
-    // Compile LOD elemets
+    /* Compile LOD elemets
+     */
 
-    {
+    { // LOD0 - HQ
         compiler.current_element = ShaderElementType::NormalHq;
-
-        ShaderElement element;
-        compiler.Compile(element);
-
-        const auto index = static_cast<std::size_t>(compiler.current_element);
-        shader->elements[index] = CreateShaderElement(element);
+        compiler.detail =
+            texture_description_.GetDetailTexture( compiler.textures[0]
+                                                 , compiler.detail_texture
+                                                 , compiler.detail_scaler
+            );
+        shader_resource->elements[0] = compiler.Compile();
     }
 
-    // TODO: other passes
+    { // LOD1
+        compiler.current_element = ShaderElementType::NormalLq;
+        compiler.detail =
+            texture_description_.GetDetailTexture( compiler.textures[0]
+                                                 , compiler.detail_texture
+                                                 , compiler.detail_scaler
+            );
+        shader_resource->elements[1] = compiler.Compile();
+    }
 
-    // TODO: check if unique
-    shaders_.push_back(shader);
-    return shader;
+    { // LOD2
+        compiler.current_element = ShaderElementType::LightPoint;
+        compiler.detail =  // TODO: not sure if can be detailed
+            texture_description_.GetDetailTexture(compiler.textures[0]
+                                                 , compiler.detail_texture
+                                                 , compiler.detail_scaler
+            );
+        shader_resource->elements[2] = compiler.Compile();
+    }
+
+    { // LOD3
+        compiler.current_element = ShaderElementType::LightSpot;
+        compiler.detail = // TODO: not sure if can be detailed
+            texture_description_.GetDetailTexture(compiler.textures[0]
+                , compiler.detail_texture
+                , compiler.detail_scaler
+            );
+        shader_resource->elements[3] = compiler.Compile();
+    }
+
+    { // LOD4
+        compiler.current_element = ShaderElementType::LightSpecial;
+        compiler.detail = true; // TODO: what the hack? :)
+        shader_resource->elements[4] = compiler.Compile();
+    }
+
+    { // LOD5 -- ?
+        compiler.current_element = ShaderElementType::Unknown;
+        compiler.detail = false;
+        shader_resource->elements[5] = compiler.Compile();
+    }
+
+    // Check if we already have this shader created
+    const auto predicate = [&](const auto &shader) -> bool
+    {
+        return shader_resource->IsEqual(*shader);
+    };
+    const auto &iterator =
+        std::find_if( shaders_.cbegin()
+                    , shaders_.cend()
+                    , predicate
+        );
+
+    if (iterator != shaders_.cend())
+    {
+        return *iterator;
+    }
+
+    shaders_.push_back(shader_resource);
+    return shader_resource;
 }
