@@ -45,14 +45,38 @@ UiRender::SetAlphaRef
 
 
 /*!
- * \brief   Stub  implementation
+ * \brief   Dynamic scissor test control
+ * \param [in] area rectangle scissor area
  */
 void
 UiRender::SetScissor
         ( Irect *area /* = nullptr */
         )
 {
-    Msg("! %s: not implemented", __FUNCTION__);
+    vk::Rect2D scissor;
+    bool enable = false;
+
+    if (area)
+    {
+        scissor
+            .setOffset({ area->x1
+                       , area->y1
+                       }
+            )
+            .setExtent({ std::uint32_t(area->width())
+                       , std::uint32_t(area->height())
+                       }
+            );
+
+        enable = true;
+    }
+    else
+    {
+        /* NOTE: a `nullptr` means that client wants
+         *       to disable scissoring
+         */
+    }
+    backend.SetScissor(scissor, enable);
 }
 
 
