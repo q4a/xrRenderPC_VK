@@ -50,8 +50,22 @@ ResourceManager::CreateTexture
 void
 Texture::ApplyTheora()
 {
-    // TBI
-    R_ASSERT(false);
+    // TODO: time can be set by UI video sequence
+    const bool redraw = theora_->Update(Device.dwTimeContinual);
+    if (redraw)
+    {
+        // TODO: GetHostPointer() here
+        std::uint32_t *pointer =
+            static_cast<std::uint32_t *>(image->cpu_buffer_->allocation_info.pMappedData);
+
+        const std::uint32_t width =
+            theora_->Width(false) - theora_->Width(true);
+        int count;
+        theora_->DecompressFrame(pointer, width, count);
+
+        flags.staging = true; // do frame upload
+    }
+    ApplyNormal();
 }
 
 
@@ -87,7 +101,8 @@ Texture::ApplyNormal()
 {
     if (flags.staging)
     {
-        image->Sync();
+		image->Sync();
+		flags.staging = false; // already resident in device memory
     }
 }
 
@@ -174,9 +189,24 @@ Texture::Load()
     {
         /* Theora video stream
          */
+        theora_ = std::make_unique<CTheoraSurface>();
+
+        if (!theora_->Load(path))
+        {
+            FATAL("Can't open video stream");
+        }
+
+        theora_->Play(true, Device.dwTimeContinual);
+
+        // Create image buffer
+        const auto extent = vk::Extent3D()
+            .setWidth(theora_->Width(false))
+            .setHeight(theora_->Height(false))
+            .setDepth(1);
+
+        image = std::make_shared<StreamImage>(extent);
 
         type = TextureType::Theora;
-        R_ASSERT2(false, "Theora stream isn't supported yet");
     }
     else if (FS.exist( path
                      , "$game_textures$"
@@ -296,10 +326,7 @@ Texture::TextureLoad
     R_ASSERT(rstream);
 
     auto resource =
-        std::shared_ptr<StreamImage>{ new StreamImage{ rstream->pointer()
-                                                     , (size_t)rstream->length()
-                                                     }
-        };
+        std::make_shared<StreamImage>(rstream->pointer(), rstream->length());
 
     if (!flags.staging)
     {

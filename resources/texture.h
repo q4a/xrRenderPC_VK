@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "xrEngine/xrTheora_Surface.h"
+
 #include "backend/streams.h"
 
 class Texture
@@ -32,6 +34,7 @@ class Texture
 
     std::uint32_t ms_per_frame; ///< Milliseconds per frame in animation sequence
     std::vector<std::shared_ptr<StreamImage>> sequence_frames; ///< Animation frames
+    std::unique_ptr<CTheoraSurface> theora_; ///< Theora surface
 
     std::shared_ptr<StreamImage> TextureLoad(const std::string &file_name);
     void ApplyLoad();
