@@ -21,6 +21,14 @@ public:
     void OnFrameBegin(std::uint32_t frame_index);
     void OnFrameEnd(std::uint32_t frame_index);
 
+    /* Render state control */
+
+    /*!
+     * \brief   Sets scissor test parameters for current pass
+     */
+    void SetScissor( const vk::Rect2D &scissor ///< [in] scissor rectangle area
+                   , bool              enable  ///< [in] do scissor test
+                   );
     void SetShader(const std::shared_ptr<Shader> &shader);
     void SetGeometry( DataStream<VertexStream> &vertices
                     , DataStream<IndexStream>  &indices
@@ -53,12 +61,19 @@ private:
     void BindVertexBuffer(DataStream<VertexStream> &vertices);
     void BindIndexBuffer(DataStream<IndexStream> &indices);
 
+    /*!
+     * \brief   Invalidates render state
+     */
+    void InvalidateState();
+
     struct RenderState
     {
         std::shared_ptr<ShaderPass> pass;
         DataStream<VertexStream> *vertices; // TODO: not quite elegant
         DataStream<IndexStream>  *indices;
         std::uint32_t frame_index;
+
+        bool scissor = false;
     } state;
 
     vk::UniqueCommandPool cmd_pool_;

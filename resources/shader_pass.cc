@@ -25,8 +25,18 @@ static vk::PipelineRasterizationStateCreateInfo state__rasterization =
 {};
 static vk::PipelineMultisampleStateCreateInfo state__multisampling =
 {};
+
+static constexpr vk::DynamicState dynamic_states[] =
+{
+    vk::DynamicState::eScissor
+};
+
 static vk::PipelineDynamicStateCreateInfo state__dynamic =
-{};
+{
+    {},
+    _countof(dynamic_states),
+    dynamic_states
+};
 
 /*!
  * Pipeline shared stencils
@@ -52,7 +62,7 @@ static vk::GraphicsPipelineCreateInfo pipeline_create_info =
     &state__multisampling,
     &state__depth_stencil,
     &state__color_blend,
-    nullptr,
+    &state__dynamic,
 };
 
 

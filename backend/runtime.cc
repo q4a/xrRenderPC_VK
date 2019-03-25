@@ -74,6 +74,19 @@ BackEnd::OnFrameEnd
         .setPSignalSemaphores(&render_semaphores[frame_index].get());
 
     hw.submission_q.submit(submit_info, {});
+
+    InvalidateState();
+}
+
+
+//-----------------------------------------------------------------------------
+void
+BackEnd::InvalidateState()
+{
+    state.pass.reset();
+    state.indices  = nullptr;
+    state.vertices = nullptr;
+    state.scissor  = false;
 }
 
 
@@ -199,13 +212,25 @@ BackEnd::SetShader
     // In case when the descriptors set has been binded before
     // the next descriptors update will break the command
     // buffer. For such case do update only once a frame.
-	if (pass->frame_when_updated != Device.dwFrame)
-	{
-		UpdateDescriptors();
-		pass->frame_when_updated = Device.dwFrame;
-	}
+    if (pass->frame_when_updated != Device.dwFrame)
+    {
+        UpdateDescriptors();
+        pass->frame_when_updated = Device.dwFrame;
+    }
 
     auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
+
+    // set dynamic state
+    if (!state.scissor)
+    {
+        const auto &default_scissor = vk::Rect2D()
+            .setExtent({ hw.draw_rect.width
+                       , hw.draw_rect.height
+                       }
+        );
+        
+        cmd_buffer->setScissor(0, { default_scissor });
+    }
 
     // set shaders
     cmd_buffer->bindPipeline( vk::PipelineBindPoint::eGraphics
@@ -219,6 +244,23 @@ BackEnd::SetShader
                                   , {}
     );
 }
+
+
+//-----------------------------------------------------------------------------
+void
+BackEnd::SetScissor
+        ( const vk::Rect2D &scissor
+        , bool              enable
+        )
+{
+    if (enable)
+    {
+        const auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
+        cmd_buffer->setScissor(0, { scissor });
+    }
+    state.scissor = enable;
+}
+
 
 void
 BackEnd::SetGeometry
