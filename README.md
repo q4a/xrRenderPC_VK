@@ -8,12 +8,12 @@ We are on the very early stage hence current code mostly consists of TODOs. Desp
 * HLSL shaders cross-compilation
 * Font render
 * Animated textures
+* Basic menu
 
-(Check for the latest [screenshot](docs/screenshot-21-Mar-2019.png))
+(Check for the latest [screenshot](docs/screenshot-25-Mar-2019.png))
 
 And upcoming functionality is:
 
-* Menu BG
 * Depth buffer and render targets
 * Post-processing subpass
 
