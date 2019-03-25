@@ -35,6 +35,8 @@ public:
     std::map<std::string, std::shared_ptr<Texture>>       textures; ///< textures requested by blender
     std::map<std::string, SamplerDescription>             samplers; ///< samplers requested by blender
 
+    std::uint32_t frame_when_updated = 0;
+
 private:
     vk::DescriptorSetLayout descriptors_layout;
 };

@@ -196,11 +196,14 @@ BackEnd::SetShader
     }
     state.pass = pass;
 
-    // TODO: in case when the shader has been binded before
-    //       the next descriptors update will break the command
-    //       buffer. Need to consider per-frame descriptors
-    //       update.
-    UpdateDescriptors();
+    // In case when the descriptors set has been binded before
+    // the next descriptors update will break the command
+    // buffer. For such case do update only once a frame.
+	if (pass->frame_when_updated != Device.dwFrame)
+	{
+		UpdateDescriptors();
+		pass->frame_when_updated = Device.dwFrame;
+	}
 
     auto &cmd_buffer = draw_cmd_buffers_[state.frame_index];
 
