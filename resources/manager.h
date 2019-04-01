@@ -29,6 +29,8 @@ using FragmentShaders = std::map<std::string, FragmentShaderPtr>;
 
 class ResourceManager
 {
+    friend class BlenderCompiler;
+
 public:
     ResourceManager() = default;
     ~ResourceManager() = default;

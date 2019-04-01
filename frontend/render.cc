@@ -1,3 +1,5 @@
+#include "xrGame/GamePersistent.h"
+
 #include "device/device.h"
 #include "backend/backend.h"
 
@@ -35,6 +37,21 @@ FrontEnd::GetForceGPU_REF()
 }
 
 
+bool
+FrontEnd::HWSupportsShaderYUV2RGB()
+{
+    /*
+     * Nothing here.
+     * The YUV2RGB conversion can be done on CPU side
+     * or by shader (if HW can support this). We forced
+     * Theora stream decoder to use the second option.
+     */
+
+    // TODO: Software coversion is broken and
+    //       still uses YUV2RGB shader
+    return true;
+}
+
 /**
  *
  */
@@ -51,13 +68,18 @@ FrontEnd::getShaderPath()
 void
 FrontEnd::Create
         ( SDL_Window *hwnd
-        , u32& width
-        , u32& height
-        , float& width_2
-        , float& height_2
+        , u32        &width
+        , u32        &height
+        , float      &width_2
+        , float      &height_2
         )
 {
+    width_2  = float(width  / 2);
+    height_2 = float(height / 2);
+
     hw.CreateDevice(hwnd);
+
+    render_target = std::make_shared<RenderTarget>();
 }
 
 
@@ -180,4 +202,37 @@ FrontEnd::End()
     #ifdef DEBUG
     hw.device->waitIdle();
     #endif
+}
+
+
+IRender_Target *
+FrontEnd::getTarget()
+{
+    return render_target.get();
+}
+
+
+void
+FrontEnd::RenderMenu()
+{
+    // Main menu render
+    g_pGamePersistent->OnRenderPPUI_main();
+
+    // Post processing
+}
+
+
+void
+FrontEnd::Render()
+{
+    VERIFY(g_pGamePersistent);
+
+    /* In menu rendering */
+    if (g_pGamePersistent->OnRenderPPUI_query())
+    {
+        RenderMenu();
+        return;
+    }
+
+    /* Scene rendering */
 }

@@ -7,6 +7,7 @@
 #include "xrEngine/pure.h"
 #include "xrEngine/Render.h"
 
+#include "frontend/render_target.h"
 #include "resources/manager.h"
 
 class FrontEnd
@@ -44,7 +45,7 @@ public:
     IRender_Sector* getSector(int id) override { return nullptr; } // TBI
     IRenderVisual* getVisual(int id) override { return nullptr; } // TBI
     IRender_Sector* detectSector(const Fvector& P) override { return nullptr; } // TBI
-    IRender_Target* getTarget() override { return nullptr; } // TBI
+    IRender_Target* getTarget() final;
 
     // Main
     void set_Transform(Fmatrix* M) override {} // TBI
@@ -94,7 +95,7 @@ public:
 
     // Main
     void Calculate() override {} // TBI
-    void Render() override {} // TBI
+    void Render() final;
 
     void BeforeWorldRender() override {} // TBI
     void AfterWorldRender() override {} // TBI
@@ -144,7 +145,7 @@ public:
     void ResourcesDumpMemoryUsage() override {} // TBI
 
     // HWSupport
-    bool HWSupportsShaderYUV2RGB() override { return false; } // TBI
+    bool HWSupportsShaderYUV2RGB() final;
 
     // Device state
     DeviceState GetDeviceState() override;
@@ -161,6 +162,8 @@ protected:
     void ScreenshotImpl(ScreenshotMode mode, LPCSTR name, CMemoryWriter* memory_writer) override {} // TBI
 
 private:
+    void RenderMenu();
+
     std::uint32_t current_image_ = 0;
     vk::Result swapchain_state_ = vk::Result::eSuccess;
 
@@ -171,6 +174,8 @@ public:
         bool shader__dump_source        = true;
         bool shader__disassemble        = false;
     } o;
+
+    std::shared_ptr<RenderTarget> render_target;
 };
 
 extern FrontEnd frontend;
