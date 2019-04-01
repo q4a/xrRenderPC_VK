@@ -110,6 +110,17 @@ BlenderCompiler::PassSampler
         return;
     }
 
+    if (resource_name == "smp_rtlinear")
+    {
+        SamplerAddressing(resource_name, vk::SamplerAddressMode::eClampToEdge);
+        SamplerFiltering( resource_name
+                        , vk::Filter::eLinear
+                        , vk::Filter::eLinear
+                        , vk::SamplerMipmapMode::eNearest
+        );
+        return;
+    }
+
     // TODO: handle all samplers
     R_ASSERT(false);
 }
@@ -129,6 +140,26 @@ BlenderCompiler::SamplerAddressing
         .setAddressModeU(mode)
         .setAddressModeV(mode)
         .setAddressModeW(mode);
+}
+
+
+//-----------------------------------------------------------------------------
+void
+BlenderCompiler::SamplerFiltering
+        ( const std::string    &sampler_name
+        , vk::Filter            magnifier
+        , vk::Filter            minifier
+        , vk::SamplerMipmapMode mip_mode
+        )
+{
+    const auto &iterator = pass.samplers.find(sampler_name);
+    R_ASSERT2(iterator != pass.samplers.cend(), "Unknown sampler resource");
+
+    auto &description = iterator->second;
+    description.create_info
+        .setMagFilter(magnifier)
+        .setMinFilter(minifier)
+        .setMipmapMode(mip_mode);
 }
 
 

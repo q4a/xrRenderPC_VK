@@ -47,6 +47,11 @@ public:
     // Sampler control
     void SamplerAnisotropy(const std::string &sampler_name, bool enable);
     void SamplerAddressing(const std::string &sampler_name, vk::SamplerAddressMode mode);
+    void SamplerFiltering( const std::string    &sampler_name
+                         , vk::Filter            magnifier
+                         , vk::Filter            minifier
+                         , vk::SamplerMipmapMode mip_mode
+                         );
 
     std::vector<std::string> textures; ///< binded textures names
     std::string detail_texture; ///< detail texture name
