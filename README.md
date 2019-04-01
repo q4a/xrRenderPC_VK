@@ -10,7 +10,7 @@ We are on the very early stage hence current code mostly consists of TODOs. Desp
 * Animated textures
 * Basic menu
 
-(Check for the latest [screenshot](docs/screenshot-01-Apr-2019.png))
+(Check for the latest [screenshot](docs/screenshots/screenshot-01-Apr-2019.png))
 
 And upcoming functionality is:
 
