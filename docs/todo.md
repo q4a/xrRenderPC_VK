@@ -24,6 +24,7 @@
 ### Back end
 
 - [ ] Add statistics for buffers utilization (see ``stats_manager``)
+- [ ] Alpha blending is badly broken (see menu fonts)
 - [ ] [PERF] Load vertex attributes in separate buffers
 
 ### Memory allocation
