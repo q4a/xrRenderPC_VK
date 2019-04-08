@@ -72,13 +72,47 @@ MenuRender::Render()
     p0.set(.5f / _w, .5f / _h);
     p1.set((_w + .5f) / _w, (_h + .5f) / _h);
 
-    vertex.Set(glm::vec4{ EPS, float(_h + EPS), d_Z, d_W }, glm::vec2{ p0.x, p1.y }, glm::vec4{ 1.0f });
+    const float y0_corrected = float(_h) - float(_h + EPS);
+    const float y1_corrected = float(_h) - EPS;
+
+    vertex.Set( glm::vec4{ EPS
+                         , y0_corrected
+                         , d_Z
+                         , d_W
+                         }
+              , glm::vec2{ p0.x, p1.y }
+              , glm::vec4{ 1.0f }
+    );
     vertex_buffer << (BufferStride)vertex;
-    vertex.Set(glm::vec4{ EPS, EPS, d_Z, d_W }, glm::vec2{ p0.x, p0.y }, glm::vec4{ 1.0f });
+    
+    vertex.Set( glm::vec4{ EPS
+                         , y1_corrected
+                         , d_Z
+                         , d_W
+                         }
+               , glm::vec2{ p0.x, p0.y }
+               , glm::vec4{ 1.0f }
+    );
     vertex_buffer << (BufferStride)vertex;
-    vertex.Set(glm::vec4{ float(_w + EPS), float(_h + EPS), d_Z, d_W }, glm::vec2{ p1.x, p1.y }, glm::vec4{ 1.0f });
+
+    vertex.Set( glm::vec4{ float(_w + EPS)
+                         , y0_corrected
+                         , d_Z
+                         , d_W
+                         }
+              , glm::vec2{ p1.x, p1.y }
+              , glm::vec4{ 1.0f }
+    );
     vertex_buffer << (BufferStride)vertex;
-    vertex.Set(glm::vec4{ float(_w + EPS), EPS, d_Z, d_W }, glm::vec2{ p1.x, p0.y }, glm::vec4{ 1.0f });
+
+    vertex.Set( glm::vec4{ float(_w + EPS)
+                         , y1_corrected
+                         , d_Z
+                         , d_W
+                         }
+              , glm::vec2{ p1.x, p0.y }
+              , glm::vec4{ 1.0f }
+    );
     vertex_buffer << (BufferStride)vertex;
 
     backend.SetShader(shader_);
