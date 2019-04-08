@@ -110,6 +110,12 @@ Texture::ApplyNormal()
 void
 Texture::ApplyLoad()
 {
+    if (flags.user)
+    {
+        // Nothing to do when referencing render target
+        return;
+    }
+
     if (!flags.loaded)
     {
         Load();
@@ -169,7 +175,7 @@ Texture::Load()
         return;
     }
 
-    if (name == "$user")
+    if (name._Starts_with("$user"))
     {
         flags.user = true;
         return;
