@@ -9,62 +9,6 @@
 /**
  *
  */
-void FrontEnd::SetupGPU
-        ( bool force_sw
-        , bool force_nonpure
-        , bool force_ref
-        )
-{
-    /*
-     * Nothing here.
-     * We don't support concept of reference devices and
-     * expect all TnL processing on HW side.
-     */
-}
-
-
-/**
- *
- */
-bool
-FrontEnd::GetForceGPU_REF()
-{
-    /*
-     * Nothing here.
-     * We don't support concept of reference devices
-     */
-    return false;
-}
-
-
-bool
-FrontEnd::HWSupportsShaderYUV2RGB()
-{
-    /*
-     * Nothing here.
-     * The YUV2RGB conversion can be done on CPU side
-     * or by shader (if HW can support this). We forced
-     * Theora stream decoder to use the second option.
-     */
-
-    // TODO: Software coversion is broken and
-    //       still uses YUV2RGB shader
-    return true;
-}
-
-/**
- *
- */
-LPCSTR
-FrontEnd::getShaderPath()
-{
-    return "r3" DELIMITER ""; // we're using R3 shaders
-}
-
-
-/**
- *
- */
 void
 FrontEnd::Create
         ( SDL_Window *hwnd
@@ -78,8 +22,6 @@ FrontEnd::Create
     height_2 = float(height / 2);
 
     hw.CreateDevice(hwnd);
-
-    render_target = std::make_shared<RenderTarget>();
 }
 
 
@@ -104,6 +46,10 @@ FrontEnd::OnDeviceCreate
     backend.OnDeviceCreate();
 
     resources.OnDeviceCreate(shader);
+
+    render_target = std::make_shared<RenderTarget>();
+
+    main_menu_.Create();
 }
 
 
@@ -152,6 +98,8 @@ FrontEnd::OnDeviceDestroy
         ( bool keep_textures
         )
 {
+    main_menu_.Destroy();
+
     backend.OnDeviceDestroy();
 }
 
@@ -165,15 +113,18 @@ FrontEnd::Begin()
     const auto frame_semaphore =
         backend.frame_semaphores[current_image_].get();
 
-    swapchain_state_ = hw.device->acquireNextImageKHR(
-          hw.swapchain
-        , std::numeric_limits<std::uint64_t>::max()
-        , frame_semaphore
-        , nullptr
-        , &current_image_
+    swapchain_state_ =
+        hw.device->acquireNextImageKHR( hw.swapchain
+                                      , std::numeric_limits<std::uint64_t>::max()
+                                      , frame_semaphore
+                                      , nullptr
+                                      , &current_image_
     );
 
     backend.OnFrameBegin(current_image_);
+
+    // TODO: or handle this in backend, like the vanilla render does?
+    render_target->Set(RenderTarget::Type::Base);
 }
 
 
@@ -205,6 +156,7 @@ FrontEnd::End()
 }
 
 
+//-----------------------------------------------------------------------------
 IRender_Target *
 FrontEnd::getTarget()
 {
@@ -212,16 +164,7 @@ FrontEnd::getTarget()
 }
 
 
-void
-FrontEnd::RenderMenu()
-{
-    // Main menu render
-    g_pGamePersistent->OnRenderPPUI_main();
-
-    // Post processing
-}
-
-
+//-----------------------------------------------------------------------------
 void
 FrontEnd::Render()
 {
@@ -230,9 +173,10 @@ FrontEnd::Render()
     /* In menu rendering */
     if (g_pGamePersistent->OnRenderPPUI_query())
     {
-        RenderMenu();
+        main_menu_.Render();
         return;
     }
 
     /* Scene rendering */
+    // TBI
 }
