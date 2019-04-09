@@ -140,6 +140,9 @@ public:
     void SetCacheXform(Fmatrix& view, Fmatrix& projection) override {} // TBI
     void OnAssetsChanged() override {} // TBI
 
+    void MakeContextCurrent(bool acquire) override {};
+    void BeforeFrame() override {};
+
 protected:
     void ScreenshotImpl(ScreenshotMode mode, LPCSTR name, CMemoryWriter* memory_writer) override {} // TBI
 };
