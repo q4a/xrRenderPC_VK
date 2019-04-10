@@ -83,7 +83,7 @@ MenuRender::Render()
               , glm::vec2{ p0.x, p1.y }
               , glm::vec4{ 1.0f }
     );
-    vertex_buffer << (BufferStride)vertex;
+    vertex_buffer << vertex;
     
     vertex.Set( glm::vec4{ EPS
                          , y1_corrected
@@ -93,7 +93,7 @@ MenuRender::Render()
                , glm::vec2{ p0.x, p0.y }
                , glm::vec4{ 1.0f }
     );
-    vertex_buffer << (BufferStride)vertex;
+    vertex_buffer << vertex;
 
     vertex.Set( glm::vec4{ float(_w + EPS)
                          , y0_corrected
@@ -103,7 +103,7 @@ MenuRender::Render()
               , glm::vec2{ p1.x, p1.y }
               , glm::vec4{ 1.0f }
     );
-    vertex_buffer << (BufferStride)vertex;
+    vertex_buffer << vertex;
 
     vertex.Set( glm::vec4{ float(_w + EPS)
                          , y1_corrected
@@ -113,7 +113,7 @@ MenuRender::Render()
               , glm::vec2{ p1.x, p0.y }
               , glm::vec4{ 1.0f }
     );
-    vertex_buffer << (BufferStride)vertex;
+    vertex_buffer << vertex;
 
     backend.SetShader(shader_);
     backend.SetGeometry(vertex_buffer, backend.index_cache);

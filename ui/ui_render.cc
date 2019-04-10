@@ -164,7 +164,7 @@ UiRender::PushPoint
                       , u
                       , v
             );
-            backend.vertex_stream << (BufferStride)vertex;
+            backend.vertex_stream << vertex;
         }
         break;
     default:

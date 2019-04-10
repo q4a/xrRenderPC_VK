@@ -27,9 +27,7 @@ fFontRender::Initialize
         , LPCSTR texture_name
         )
 {
-    shader_ = resources.CreateShader( shader_name
-                                    , texture_name
-    );
+    shader_ = resources.CreateShader(shader_name, texture_name);
 }
 
 /**
@@ -156,16 +154,16 @@ fFontRender::OnRender
                         const auto y2_corrected = float(hw.draw_rect.height) - Y2;
 
                         vertex.Set(X, y2_corrected, clr2, tu, tv + owner.fTCHeight);
-                        vertex_buffer << (BufferStride)vertex;
+                        vertex_buffer << vertex;
 
                         vertex.Set(X, y_corrected, clr, tu, tv);
-                        vertex_buffer << (BufferStride)vertex;
+                        vertex_buffer << vertex;
 
                         vertex.Set(X + scw, y2_corrected, clr2, tu + fTCWidth, tv + owner.fTCHeight);
-                        vertex_buffer << (BufferStride)vertex;
+                        vertex_buffer << vertex;
 
                         vertex.Set(X + scw, y_corrected, clr, tu + fTCWidth, tv);
-                        vertex_buffer << (BufferStride)vertex;
+                        vertex_buffer << vertex;
                     }
                     X += scw * owner.vInterval.x;
                     if (owner.IsMultibyte())
