@@ -1,3 +1,8 @@
+/*
+ * \file    streams.h
+ * \brief   Data management interfaces definition
+ */
+
 #ifndef BACKEND_STREAMS_H_
 #define BACKEND_STREAMS_H_
 
@@ -5,46 +10,8 @@
 
 #include <gli/gli.hpp>
 
+#include "backend/vertex_formats.h"
 #include "device/memory.h"
-
-struct BufferStride
-{
-    const std::size_t size_;
-    void * const pointer_;
-
-    explicit BufferStride( std::size_t size
-                         , void *pointer
-                         )
-        : size_(size)
-        , pointer_(pointer)
-    {
-    }
-};
-
-
-class Index
-    : public BufferStride
-{
-    struct _stride_data_
-    {
-        std::uint16_t index;
-    } stride_data_;
-public:
-    Index() = default;
-    Index(std::uint16_t index)
-        : BufferStride( sizeof(stride_data_)
-                      , &stride_data_
-          )
-    {
-        stride_data_.index = index;
-    }
-
-    void Set(std::uint16_t index)
-    {
-        stride_data_.index = index;
-    }
-    static const std::size_t size = sizeof(stride_data_);
-};
 
 
 struct StreamBuffer
@@ -54,6 +21,9 @@ struct StreamBuffer
                          );
     void Create();
     void Sync();
+    /*!
+     * \brief   Returns pointer to host mapped data
+     */
     void *GetHostPointer();
 
     BufferType  type_;
@@ -69,7 +39,27 @@ struct StreamBuffer
 class StreamImage
 {
 public:
-    explicit StreamImage(void *data, std::size_t size);
+    /*!
+     * \brief   Creates an image buffer from encoded DDS data in memory
+     */
+    StreamImage( void       *data ///< [in] pointer to data
+               , std::size_t size ///< [in] data size
+               );
+
+    /*!
+     * \brief   Creates a raw image buffer
+     *
+     * Currently used for Theora video streams
+     */
+    StreamImage( const vk::Extent3D &dimensions ///< [in] image extent
+               , vk::Format          format = vk::Format::eR8G8B8A8Unorm ///< [in] image format
+               , std::uint32_t       layers_count = 1 ///< [in] color array levels
+               , std::uint32_t       levels_count = 1 ///< [in] mipmap levels
+               );
+
+    /*!
+     * \brief   Transfers host data into device memory
+     */
     void Sync();
 
     ImagePtr  gpu_image_;
@@ -80,23 +70,29 @@ public:
 };
 
 
+/*!
+ * \brief   Data stream control operations
+ */
 enum class StreamControl
 {
-    Reset,
-    Flush,
-    DiscardCache
+    Reset,          ///< Reset stream's pointers
+    Flush,          ///< Advance offset to current position
+    Sync,           ///< Upload data to device (has implicit `Flush`)
+    DiscardCache    ///< Rollback data pointer to initial offset
 };
 
 
+/*!
+ * \brief   Geometry stream class
+ */
 template <class T>
 class DataStream
     : public StreamBuffer
 {
 public:
-
     explicit DataStream<T>(std::size_t size);
 
-    DataStream &operator <<(const BufferStride &&value)
+    DataStream &operator <<(const BufferStride &value)
     {
         const auto total_offset = offset_ + position_;
         VERIFY(total_offset + value.size_ <= size_);
@@ -121,6 +117,10 @@ public:
             position_ = 0;
             break;
         case StreamControl::Flush:
+            offset_  += position_;
+            position_ = 0;
+            break;
+        case StreamControl::Sync:
             Sync();
             break;
         case StreamControl::DiscardCache:
@@ -139,6 +139,10 @@ public:
     }
 };
 
+
+/*!
+ * \brief   Data stream specialization types
+ */
 struct VertexStream;
 struct IndexStream;
 

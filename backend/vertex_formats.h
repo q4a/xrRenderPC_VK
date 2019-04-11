@@ -5,6 +5,46 @@
 
 #include "backend/streams.h"
 
+
+struct BufferStride
+{
+    const std::size_t size_;
+    void * const pointer_;
+
+    explicit BufferStride( std::size_t size
+                         , void *pointer
+                         )
+        : size_(size)
+        , pointer_(pointer)
+    {
+    }
+};
+
+
+class Index
+    : public BufferStride
+{
+    struct _stride_data_
+    {
+        std::uint16_t index;
+    } stride_data_;
+public:
+    Index() = default;
+    Index(std::uint16_t index)
+        : BufferStride( sizeof(stride_data_)
+                      , &stride_data_
+         )
+    {
+        stride_data_.index = index;
+    }
+
+    void Set(std::uint16_t index)
+    {
+        stride_data_.index = index;
+    }
+    static const std::size_t size = sizeof(stride_data_);
+};
+
 namespace vertex_format
 {
 class TriangleList

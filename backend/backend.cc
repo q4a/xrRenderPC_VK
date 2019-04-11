@@ -127,9 +127,5 @@ BackEnd::CreateIndexCache()
         index_cache << Index{ std::uint16_t(start_vertex + 1) };
     }
 
-    index_cache << StreamControl::Flush;
-
-    // A hack to avoid redundant flushes
-    // on pipeline geometry binding time
-    index_cache << StreamControl::Reset;
+    index_cache << StreamControl::Sync;
 }

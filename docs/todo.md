@@ -6,6 +6,7 @@
 - [ ] Switch from exceptions provided by *vulkan.hpp* to ret codes check
 - [ ] It seems that `string_path` easily casts to `pcstr` and stream ifaces take `pcstr` as well. So get rid of this type legacy
 - [ ] Make assertions verbose (eliminate things like ``R_ASSERT(false)``)
+- [ ] Use `nvtx` to simplify debugging
 
 ### Front end
 
@@ -26,6 +27,7 @@
 - [ ] Add statistics for buffers utilization (see ``stats_manager``)
 - [ ] Alpha blending is badly broken (see menu fonts)
 - [ ] [PERF] Load vertex attributes in separate buffers
+- [x] [PERF] Load geometry in one shot before buffer submission (Need to consider transfer <-> draw sync)
 
 ### Memory allocation
 

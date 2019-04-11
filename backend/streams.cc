@@ -3,9 +3,7 @@
 #include "backend/streams.h"
 
 
-/**
- *
- */
+//-----------------------------------------------------------------------------
 StreamBuffer::StreamBuffer
         ( std::size_t size
         , BufferType type
@@ -16,9 +14,7 @@ StreamBuffer::StreamBuffer
 }
 
 
-/**
- *
- */
+//-----------------------------------------------------------------------------
 void
 StreamBuffer::Create()
 {
@@ -27,15 +23,13 @@ StreamBuffer::Create()
 }
 
 
-/**
- *
- */
+//-----------------------------------------------------------------------------
 void
 StreamBuffer::Sync()
 {
-    VERIFY(offset_ + position_ <= size_);
+    const auto transfer_size = offset_ + position_;
+    VERIFY(transfer_size <= size_);
 
-    const auto transfer_size = position_;
     if (transfer_size == 0) // no data
     {
         return;
@@ -43,18 +37,16 @@ StreamBuffer::Sync()
 
     hw.Transfer( gpu_buffer_
                , cpu_buffer_
-               , offset_
+               , 0 // offset
                , transfer_size
     );
 
-    offset_  += position_;
+    offset_   = 0;
     position_ = 0;
 }
 
 
-/*!
- * \brief   Return pointer to host mapped data
- */
+//-----------------------------------------------------------------------------
 void *
 StreamBuffer::GetHostPointer()
 {
@@ -62,12 +54,7 @@ StreamBuffer::GetHostPointer()
 }
 
 
-/*!
- * \brief   The only image stream class constructor
- *
- * \param [in] data pointer to image data
- * \param [in] size size of image in memory
- */
+//-----------------------------------------------------------------------------
 StreamImage::StreamImage
         ( void        *data
         , std::size_t  size
@@ -93,9 +80,30 @@ StreamImage::StreamImage
 }
 
 
-/*!
- * \brief   Transfers host data into device memory
- */
+//-----------------------------------------------------------------------------
+StreamImage::StreamImage
+        ( const vk::Extent3D &dimensions
+        , vk::Format          format /* = vk::Format::eR8G8B8A8Unorm */
+        , std::uint32_t       layers_count /* = 1 */
+        , std::uint32_t       levels_count /* = 1 */
+        )
+{
+    extent = dimensions;
+
+    constexpr auto texel_size = 4; // TODO: this is for R8G8B8A8
+    const auto image_size = extent.width * extent.height * texel_size;
+
+    cpu_buffer_ = hw.CreateCpuBuffer(image_size);
+    gpu_image_  = hw.CreateGpuImage( dimensions
+                                   , format
+                                   , layers_count
+                                   , levels_count
+                                   );
+    view        = gpu_image_->CreateView();
+}
+
+
+//-----------------------------------------------------------------------------
 void
 StreamImage::Sync()
 {
@@ -103,9 +111,7 @@ StreamImage::Sync()
 }
 
 
-/**
- *
- */
+//-----------------------------------------------------------------------------
 template <>
 DataStream<VertexStream>::DataStream
         ( std::size_t size
@@ -115,9 +121,7 @@ DataStream<VertexStream>::DataStream
 }
 
 
-/**
- *
- */
+//-----------------------------------------------------------------------------
 template <>
 DataStream<IndexStream>::DataStream
         ( std::size_t size
