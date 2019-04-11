@@ -12,6 +12,13 @@ enum class BufferType //TODO: replace by VK_BUFFER...
     Image
 };
 
+enum class ImageType
+{
+    Texture,
+    Buffer,
+    Depth
+};
+
 struct DeviceAllocation
 {
     explicit DeviceAllocation(const VmaAllocator *allocator);
@@ -43,6 +50,7 @@ class DeviceImage
     std::uint32_t levels_count; ///< Mipmap levels
     vk::Extent3D  extent; ///< Image dimensions
     vk::Format    format; ///< Image format
+    ImageType     type; ///< Type of image
 public:
     explicit DeviceImage(const VmaAllocator *allocator);
     ~DeviceImage();

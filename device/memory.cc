@@ -70,27 +70,48 @@ vk::ImageView
 DeviceImage::CreateView()
 {
     // Create image view
-    const auto &subresource_range = vk::ImageSubresourceRange()
-        .setAspectMask(vk::ImageAspectFlagBits::eColor) // TODO
+    auto &subresource_range = vk::ImageSubresourceRange()
         .setLayerCount(layers_count)
         .setLevelCount(levels_count);
+
+    switch (type)
+    {
+    case ImageType::Buffer:
+        // no break here
+    case ImageType::Texture:
+        subresource_range.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        break;
+    case ImageType::Depth:
+        subresource_range.setAspectMask(vk::ImageAspectFlagBits::eDepth);
+        break;
+    default:
+        FATAL("Invalid image type");
+    }
+
+    auto components_mapping = vk::ComponentMapping();
+
+    if (format == vk::Format::eR8Unorm)
+    {
+        components_mapping
+            .setA(vk::ComponentSwizzle::eR)
+            .setR(vk::ComponentSwizzle::eOne)
+            .setG(vk::ComponentSwizzle::eOne)
+            .setB(vk::ComponentSwizzle::eOne);
+    }
 
     const auto &view_create_info = vk::ImageViewCreateInfo()
         .setImage(vk::Image{ image })
         .setViewType(vk::ImageViewType::e2D) // TODO
         .setFormat(format)
-        .setSubresourceRange(subresource_range);
+        .setSubresourceRange(subresource_range)
+        .setComponents(components_mapping);
 
     const auto view = hw.device->createImageView(view_create_info);
     return view;
 }
 
 
-/*!
- * \brief   Allocates host memory
- *
- * \param [in] size buffer size
- */
+//-----------------------------------------------------------------------------
 BufferPtr
 Hw::CreateCpuBuffer
         ( std::size_t size
@@ -109,24 +130,20 @@ Hw::CreateCpuBuffer
     alloc_create_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;
     alloc_create_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-    vmaCreateBuffer( allocator_
-                   , &buffer_create_info
-                   , &alloc_create_info
-                   , &buffer->buffer
-                   , &buffer->allocation
-                   , &buffer->allocation_info
+    auto result = vmaCreateBuffer( allocator_
+                                 , &buffer_create_info
+                                 , &alloc_create_info
+                                 , &buffer->buffer
+                                 , &buffer->allocation
+                                 , &buffer->allocation_info
     );
+    VERIFY(result == VK_SUCCESS);
 
     return buffer;
 }
 
 
-/*!
- * \brief   Allocates device memory
- *
- * \param [in] size buffer size
- * \param [in] type buffer type (Uniform/Index/Vertex)
- */
+//-----------------------------------------------------------------------------
 BufferPtr
 Hw::CreateGpuBuffer
         ( std::size_t size
@@ -161,27 +178,23 @@ Hw::CreateGpuBuffer
     VmaAllocationCreateInfo alloc_create_info{};
     alloc_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateBuffer( allocator_
-                   , &buffer_create_info
-                   , &alloc_create_info
-                   , &buffer->buffer
-                   , &buffer->allocation
-                   , nullptr
+    auto result = vmaCreateBuffer( allocator_
+                                 , &buffer_create_info
+                                 , &alloc_create_info
+                                 , &buffer->buffer
+                                 , &buffer->allocation
+                                 , nullptr
     );
+    VERIFY(result == VK_SUCCESS);
 
     return buffer;
 }
 
 
-/*!
- * \brief   Transfers CPU buffer into device memory buffer
- *
- * \param [in] desination destination device buffer object
- * \param [in] source     source host buffer object
- */
+//-----------------------------------------------------------------------------
 void
 Hw::Transfer
-        ( BufferPtr       &destination
+        ( const BufferPtr &destination
         , const BufferPtr &source
         , std::size_t      offset
         , std::size_t      size
@@ -216,63 +229,97 @@ Hw::Transfer
 }
 
 
-/*!
- * \brief   Allocates device memory for image data
- *
- * \param [in] image_description GLI `texture` descriptor
- */
+//-----------------------------------------------------------------------------
 ImagePtr
 Hw::CreateGpuImage
-        ( const gli::texture &&image_description
+        ( const gli::texture &image_description
+        ) const
+{
+    vk::Extent3D dimensions;
+    dimensions.width  = image_description.extent().x;
+    dimensions.height = image_description.extent().y;
+    dimensions.depth  = image_description.extent().z;
+
+    auto format = vk::Format{ image_description.format() };
+    if (image_description.format() == gli::FORMAT_A8_UNORM_PACK8)
+    {
+		format = vk::Format::eR8Unorm;
+    }
+
+    return CreateGpuImage( dimensions
+                         , format
+                         , image_description.layers()
+                         , image_description.levels()
+    );
+}
+
+
+//-----------------------------------------------------------------------------
+ImagePtr
+Hw::CreateGpuImage
+        ( const vk::Extent3D &dimensions
+        , vk::Format          format
+        , std::uint32_t       layers_count
+        , std::uint32_t       levels_count
+        , ImageType           type /* = ImageType::Texture */
         ) const
 {
     ImagePtr image =
         std::unique_ptr<DeviceImage>{ new DeviceImage { &allocator_ } };
 
-    image->layers_count = image_description.layers();
-    image->levels_count = image_description.levels();
-    image->format       = vk::Format{ image_description.format() };
-
-    auto &dimensions = image->extent;
-    dimensions.width  = image_description.extent().x;
-    dimensions.height = image_description.extent().y;
-    dimensions.depth  = image_description.extent().z;
+    image->extent       = dimensions;
+    image->layers_count = layers_count;
+    image->levels_count = levels_count;
+    image->format       = format;
+    image->type         = type;
 
     VkImageCreateInfo image_create_info{};
     image_create_info.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image_create_info.extent        = dimensions;
+    image_create_info.extent        = image->extent;
     image_create_info.imageType     = VK_IMAGE_TYPE_2D; // TODO: take it from metadata
     image_create_info.mipLevels     = image->levels_count;
     image_create_info.arrayLayers   = image->layers_count;
     image_create_info.format        = (VkFormat)image->format;
     image_create_info.tiling        = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_create_info.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT
+
+    switch (image->type)
+    {
+    case ImageType::Texture:
+        image_create_info.usage     = VK_IMAGE_USAGE_TRANSFER_DST_BIT
                                     | VK_IMAGE_USAGE_SAMPLED_BIT;
+        break;
+    case ImageType::Buffer:
+        image_create_info.usage     = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                                    | VK_IMAGE_USAGE_SAMPLED_BIT;
+        break;
+    case ImageType::Depth:
+        image_create_info.usage     = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        break;
+    default:
+        R_ASSERT(0);
+    }
+
     image_create_info.samples       = VK_SAMPLE_COUNT_1_BIT;
     image_create_info.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
 
     VmaAllocationCreateInfo alloc_create_info{};
     alloc_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage( allocator_
-                  , &image_create_info
-                  , &alloc_create_info
-                  , &image->image
-                  , &image->allocation
-                  , nullptr
+    auto result = vmaCreateImage( allocator_
+                                , &image_create_info
+                                , &alloc_create_info
+                                , &image->image
+                                , &image->allocation
+                                , nullptr
     );
+    VERIFY(result == VK_SUCCESS);
 
     return image;
 }
 
 
-/*!
- * \brief   Transfers CPU buffer into device image
- *
- * \param [in] desination destination image object
- * \param [in] source     source host buffer object
- */
+//-----------------------------------------------------------------------------
 void
 Hw::Transfer
         ( ImagePtr        &destination

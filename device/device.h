@@ -38,26 +38,11 @@ class Hw
     void DestroyCommandBuffers();
     void DestroySwapchain();
 
-    // Memory management
-    BufferPtr CreateCpuBuffer( std::size_t size ) const;
-    BufferPtr CreateGpuBuffer( std::size_t size
-                             , BufferType type
-                             ) const;
-    ImagePtr CreateGpuImage(const gli::texture &&image_description) const;
-
-    void Transfer( BufferPtr &destination
-                 , const BufferPtr &source
-                 , std::size_t offset
-                 , std::size_t size
-                 ) const;
-    void Transfer( ImagePtr &destination, const BufferPtr &source );
-
 public:
     struct SwapchainResource
     {
         vk::ImageView imageView;
         vk::Image image;
-        vk::Framebuffer frameBuffer;
     };
 
     Hw() = default;
@@ -70,6 +55,47 @@ public:
     // Interface implementations
     void OnAppActivate() override;
     void OnAppDeactivate() override;
+
+    /* Memory management
+     */
+
+    /*!
+     * \brief   Allocates host memory buffer
+     */
+    BufferPtr CreateCpuBuffer( std::size_t size ///< buffer size
+                             ) const;
+    /*!
+     * \brief   Allocates device memory buffer
+     */
+    BufferPtr CreateGpuBuffer( std::size_t size ///< buffer size
+                             , BufferType  type ///< buffer type (Uniform/Index/Vertex)
+                             ) const;
+    ImagePtr CreateGpuImage( const vk::Extent3D &dimensions
+                           , vk::Format          format
+                           , std::uint32_t       layers_count
+                           , std::uint32_t       levels_count
+                           , ImageType           type = ImageType::Texture
+                           ) const;
+    /*!
+     * \brief   Allocates device memory for image data
+     */
+    ImagePtr CreateGpuImage( const gli::texture &image_description ///< GLI `texture` descriptor
+                           ) const;
+
+    /*!
+     * \brief   Transfers CPU buffer into device buffer
+     */
+    void Transfer( const BufferPtr &destination ///< [in] destination buffer
+                 , const BufferPtr &source ///< [in] source buffer
+                 , std::size_t      offset ///< [in] source buffer offset (the same for destination)
+                 , std::size_t      size ///< [in] transfer size
+                 ) const;
+    /*!
+     * \brief   Transfers CPU buffer into device image
+     */
+    void Transfer( ImagePtr        &destination ///< destination image
+                 , const BufferPtr &source ///< source host buffer
+                 );
 
 public:
     Caps caps; //< device capabilities 
