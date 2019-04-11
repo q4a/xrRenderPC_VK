@@ -38,6 +38,11 @@ fFontRender::OnRender
         ( CGameFont &owner
         )
 {
+    if (owner.strings.size() == 0)
+    {
+        return; // Nothing to draw
+    }
+
     if (!shader_)
     {
         // TODO: possibly the FontRender will use nullptr to draw
