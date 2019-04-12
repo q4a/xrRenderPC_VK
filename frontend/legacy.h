@@ -73,8 +73,6 @@ public:
     void glow_destroy(IRender_Glow* p_) override {} // TBI
 
     // Models
-    IRenderVisual* model_CreateParticles(LPCSTR name) override { return nullptr; } // TBI
-    IRenderVisual* model_Create(LPCSTR name, IReader* data = 0) override { return nullptr; } // TBI
     IRenderVisual* model_CreateChild(LPCSTR name, IReader* data) override { return nullptr; } // TBI
     IRenderVisual* model_Duplicate(IRenderVisual* V) override { return nullptr; } // TBI
     void model_Delete(IRenderVisual*& visual, BOOL discard = FALSE) override {} // TBI

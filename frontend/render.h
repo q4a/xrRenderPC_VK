@@ -9,6 +9,7 @@
 
 #include "frontend/legacy.h"
 #include "frontend/main_menu.h"
+#include "frontend/model_pool.h"
 #include "frontend/render_target.h"
 #include "resources/manager.h"
 
@@ -17,6 +18,7 @@ class FrontEnd
     : public LegacyInterface
 {
     MenuRender main_menu_;
+    ModelPool  models_;
 
     std::uint32_t current_image_ = 0;
     vk::Result swapchain_state_ = vk::Result::eSuccess;
@@ -36,7 +38,10 @@ public:
     void End() final;
 
     void Render() final;
-    IRender_Target* getTarget() final;
+    IRender_Target *getTarget() final;
+
+    IRenderVisual *model_Create(LPCSTR name, IReader *data = 0) final;
+    IRenderVisual *model_CreateParticles(LPCSTR name) final;
 
     struct RenderOptions
     {

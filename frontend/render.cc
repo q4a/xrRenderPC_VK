@@ -165,6 +165,27 @@ FrontEnd::getTarget()
 
 
 //-----------------------------------------------------------------------------
+IRenderVisual *
+FrontEnd::model_Create
+        ( LPCSTR   name
+        , IReader *data /* = 0 */
+        )
+{
+    return models_.Create(name, data);
+}
+
+
+//-----------------------------------------------------------------------------
+IRenderVisual *
+FrontEnd::model_CreateParticles
+        ( LPCSTR   name
+        )
+{
+    //
+}
+
+
+//-----------------------------------------------------------------------------
 void
 FrontEnd::Render()
 {
