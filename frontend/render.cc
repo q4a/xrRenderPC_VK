@@ -49,6 +49,8 @@ FrontEnd::OnDeviceCreate
 
     render_target = std::make_shared<RenderTarget>();
 
+    particles_.OnCreate();
+
     main_menu_.Create();
 }
 
@@ -99,6 +101,8 @@ FrontEnd::OnDeviceDestroy
         )
 {
     main_menu_.Destroy();
+
+    particles_.OnDestroy();
 
     backend.OnDeviceDestroy();
 }

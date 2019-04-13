@@ -10,6 +10,7 @@
 #include "frontend/legacy.h"
 #include "frontend/main_menu.h"
 #include "frontend/model_pool.h"
+#include "frontend/particle_system.h"
 #include "frontend/render_target.h"
 #include "resources/manager.h"
 
@@ -19,6 +20,7 @@ class FrontEnd
 {
     MenuRender main_menu_;
     ModelPool  models_;
+    ParticleSystem particles_;
 
     std::uint32_t current_image_ = 0;
     vk::Result swapchain_state_ = vk::Result::eSuccess;
