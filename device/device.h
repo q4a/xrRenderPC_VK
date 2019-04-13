@@ -31,6 +31,7 @@ class Hw
 
     vk::PresentModeKHR SelectPresentMode() const;
     vk::Format SelectColorFormat() const;
+    vk::Format SelectDepthStencilFormat() const;
     vk::ColorSpaceKHR SelectColorSpace() const;
     vk::CompositeAlphaFlagBitsKHR SelectCompositeAlpha() const;
 
@@ -39,12 +40,6 @@ class Hw
     void DestroySwapchain();
 
 public:
-    struct SwapchainResource
-    {
-        vk::ImageView imageView;
-        vk::Image image;
-    };
-
     Hw() = default;
     ~Hw() = default;
 
@@ -109,7 +104,7 @@ public:
     // Swapchain
     vk::SwapchainKHR swapchain = nullptr;
     vk::Extent2D draw_rect;  //< presentation surface dimensions
-    std::vector<SwapchainResource> baseRt;
+    std::vector<vk::Image> swapchain_images;
 
 private:
     vk::UniqueInstance instance_;

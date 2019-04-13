@@ -136,6 +136,14 @@ Hw::SelectColorFormat() const
 }
 
 
+vk::Format
+Hw::SelectDepthStencilFormat() const
+{
+    // TODO: Need to be selected in accordance to the device caps.
+    return vk::Format::eD32Sfloat;
+}
+
+
 /**
  *
  */
@@ -209,44 +217,12 @@ Hw::CreateSwapchain()
 
     swapchain = device->createSwapchainKHR(swapchainCreateInfo);
 
-    // retrieve swapchain images and create views for them
-    const auto swapchainImages =
+    // retrieve swapchain images
+    swapchain_images =
         device->getSwapchainImagesKHR(swapchain);
 
-    baseRt.clear();
-    baseRt.reserve(swapchainImages.size());
-
-    auto process =
-        [&, colorFormat](const auto& image)
-        {
-            const auto subresourceRange =
-                vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor
-                                         , 0
-                                         , 1 
-                                         , 0
-                                         , 1
-                );
-        
-            const auto imageViewCreateInfo = vk::ImageViewCreateInfo()
-                .setViewType(vk::ImageViewType::e2D)
-                .setFormat(colorFormat)
-                .setImage(image)
-                .setSubresourceRange(subresourceRange);
-
-            SwapchainResource resource;
-            resource.image = image;
-            resource.imageView =
-                device->createImageView(imageViewCreateInfo);
-
-            baseRt.push_back(resource);
-        };
-
-    std::for_each( swapchainImages.cbegin()
-                 , swapchainImages.cend()
-                 , process
-    );
-
     caps.colorFormat = colorFormat;
+    caps.depthFormat = SelectDepthStencilFormat();
 }
 
 
@@ -256,10 +232,5 @@ Hw::CreateSwapchain()
 void
 Hw::DestroySwapchain()
 {
-    for (auto& resource : baseRt)
-    {
-        device->destroyFramebuffer(resource.frameBuffer);
-        device->destroyImageView(resource.imageView);
-    }
     device->destroySwapchainKHR(swapchain);
 }
