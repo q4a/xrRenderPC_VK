@@ -47,6 +47,7 @@ class Texture
  
 public:
     Texture();
+    ~Texture();
 
     void Preload();
     void Load();
@@ -55,6 +56,7 @@ public:
     std::function<void(void)> Loader;
 
     std::shared_ptr<StreamImage> image;
+    vk::ImageView view;
 };
 
 #endif // RESOURCES_TEXTURE_H_

@@ -32,7 +32,7 @@ Update__screen_res
         return;
     }
 
-    for (auto index = 0; index < hw.baseRt.size(); index++)
+    for (auto index = 0; index < hw.swapchain_images.size(); index++)
     {
         const auto &buffer = table.buffers[index];
         std::uint8_t * const buffer_pointer =

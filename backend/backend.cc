@@ -46,7 +46,7 @@ BackEnd::CreateCommandBuffers()
 
     cmd_pool_ = hw.device->createCommandPoolUnique(cmd_pool_create_info);
 
-    const auto cmd_buffers_count = hw.baseRt.size();
+    const auto cmd_buffers_count = hw.swapchain_images.size();
     const auto cmd_buffer_alloc_info = vk::CommandBufferAllocateInfo()
         .setCommandPool(cmd_pool_.get())
         .setCommandBufferCount(cmd_buffers_count)
@@ -66,13 +66,13 @@ BackEnd::OnDeviceCreate()
     CreateIndexCache();
 
     // create semaphores
-    frame_semaphores.resize(hw.baseRt.size());
+    frame_semaphores.resize(hw.swapchain_images.size());
     for (auto &semaphore : frame_semaphores)
     {
         semaphore = hw.device->createSemaphoreUnique({});
     }
 
-    render_semaphores.resize(hw.baseRt.size());
+    render_semaphores.resize(hw.swapchain_images.size());
     for (auto &semaphore : render_semaphores)
     {
         semaphore = hw.device->createSemaphoreUnique({});

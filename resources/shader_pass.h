@@ -2,9 +2,9 @@
 #define RESOURCES_SHADER_PASS_H_
 
 #include <memory>
+#include <map>
 
 #include "resources/pipeline_shader.h"
-
 #include "resources/texture.h"
 
 struct SamplerDescription
@@ -26,7 +26,7 @@ public:
     std::shared_ptr<VertexShader>   vertex_shader;
     std::shared_ptr<FragmentShader> fragment_shader;
     vk::PipelineLayout pipeline_layout;
-    vk::Pipeline pipeline;
+    std::map<vk::RenderPass, vk::Pipeline> pipelines;
     std::vector<vk::DescriptorSet> descriptors;
 
     std::map<std::string, std::shared_ptr<ShaderResource>> resources; ///< resources gathered from shaders stages

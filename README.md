@@ -1,21 +1,24 @@
 ## xrRenderPC_VK
 
-This is an attempt to create a renderer which is compatible with [X-Ray](https://github.com/OpenXRay/xray-16) engine but uses Vulkan in back end. The project is trying to follow vanilla renderers design however adding modern features like multithreading and subpasses requires major architecture changes. The task is quite challenging since even latest R4 renderer heavy relies on immediate DX11 mode.
+This is an attempt to create a renderer which is compatible with [X-Ray](https://github.com/OpenXRay/xray-16) engine but uses Vulkan in back end. The project is trying to follow vanilla renderers design, however adding modern features like multithreading and render passes require major architecture changes. The task is quite challenging since even latest R4 renderer heavy relies on immediate DX11 mode.
 
 We are on the very early stage hence current code mostly consists of TODOs. Despite the incompleteness there are several things running already:
 
-* Basic resource management (pipelines, textures, UBO)
+* Resource management (pipelines, textures, UBO)
 * HLSL shaders cross-compilation
 * Font render
 * Animated textures
 * Basic menu
+* Depth buffer and render targets
+* Post-processing
 
 (Check for the latest [screenshot](docs/screenshots/screenshot-01-Apr-2019.png))
 
 And upcoming functionality is:
 
-* Depth buffer and render targets
-* Post-processing subpass
+* THM loader
+* Particles manager
+* Model pool
 
 No detailed roadmap is developed yet and the only scratch pad for ideas can be found in [this](docs/todo.md) TODO document.
 

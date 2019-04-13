@@ -152,7 +152,7 @@ FrontEnd::End()
         .setPImageIndices(&current_image_);
     
     hw.submission_q.presentKHR(present_info);
-    current_image_ = (current_image_ + 1) % hw.baseRt.size();
+    current_image_ = (current_image_ + 1) % hw.swapchain_images.size();
 
     #ifdef DEBUG
     hw.device->waitIdle();
@@ -186,6 +186,7 @@ FrontEnd::model_CreateParticles
         )
 {
     //
+    return nullptr;
 }
 
 

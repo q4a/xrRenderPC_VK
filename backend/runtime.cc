@@ -6,9 +6,8 @@
 
 #include "backend/backend.h"
 
-/**
- *
- */
+
+//-----------------------------------------------------------------------------
 void
 BackEnd::OnFrameBegin
         ( std::uint32_t frame_index
@@ -17,50 +16,32 @@ BackEnd::OnFrameBegin
     vertex_stream << StreamControl::Reset;
     index_stream  << StreamControl::Reset;
 
-    auto& cmd_buffer = draw_cmd_buffers_[frame_index];
-    auto& swapchain_resource = hw.baseRt[frame_index];
+    auto &cmd_buffer = draw_cmd_buffers_[frame_index];
 
     const auto begin_info = vk::CommandBufferBeginInfo()
         .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-    
+
     cmd_buffer->begin(begin_info);
-
-    std::array<vk::ClearValue, 1> clear_values;
-    clear_values[0].color = vk::ClearColorValue(std::array<float, 4>{0.33f, 0.33f, 0.10f, 1.0f});
-
-    // Begin render pass
-    const auto renderpass_begin_info = vk::RenderPassBeginInfo()
-        .setRenderPass(render_pass.get())
-        .setFramebuffer(swapchain_resource.frameBuffer)
-        .setRenderArea(vk::Rect2D( vk::Offset2D(0, 0)
-                                 , vk::Extent2D( hw.draw_rect.width
-                                               , hw.draw_rect.height
-        )))
-        .setClearValueCount(clear_values.size())
-        .setPClearValues(clear_values.data());
-
-    cmd_buffer->beginRenderPass( renderpass_begin_info
-                               , vk::SubpassContents::eInline
-    );
 
     state.frame_index = frame_index;
 }
 
 
-/**
- *
- */
+//-----------------------------------------------------------------------------
 void
 BackEnd::OnFrameEnd
         ( std::uint32_t frame_index
         )
 {
-    R_ASSERT(frame_index == state.frame_index);
+    VERIFY(frame_index == state.frame_index);
 
-    auto& cmd_buffer = draw_cmd_buffers_[frame_index];
+    auto &cmd_buffer = draw_cmd_buffers_[frame_index];
 
     cmd_buffer->endRenderPass();
     cmd_buffer->end();
+
+    vertex_stream << StreamControl::Sync;
+    index_stream  << StreamControl::Sync;
 
     const vk::PipelineStageFlags wait_mask =
         vk::PipelineStageFlagBits::eTransfer;
@@ -84,12 +65,14 @@ void
 BackEnd::InvalidateState()
 {
     state.pass.reset();
+    state.render_pass = nullptr;
     state.indices  = nullptr;
     state.vertices = nullptr;
     state.scissor  = false;
 }
 
 
+//-----------------------------------------------------------------------------
 std::shared_ptr<Texture>
 BackEnd::GetActiveTexture
         ( std::size_t index
@@ -108,18 +91,18 @@ BackEnd::GetActiveTexture
 }
 
 
-/*!
- * \brief   Updates descriptors for current pipeline
- */
+//-----------------------------------------------------------------------------
 void
 BackEnd::UpdateDescriptors()
 {
     VERIFY(state.pass);
 
     std::vector<vk::WriteDescriptorSet> update_info(state.pass->resources.size());
-    vk::DescriptorBufferInfo buffer_info;
-    vk::DescriptorImageInfo  image_info;
-    vk::DescriptorImageInfo  sampler_info;
+    // TODO: Seems this objects can be destroyed earlier than
+    //       `UpdateDescriptorsSet` finished access
+    static vk::DescriptorBufferInfo buffer_info;
+    static std::vector<vk::DescriptorImageInfo> image_infos;
+    static vk::DescriptorImageInfo  sampler_info;
 
     auto i = 0;
     for (const auto &[name, resource] : state.pass->resources)
@@ -156,6 +139,8 @@ BackEnd::UpdateDescriptors()
             break;
         case vk::DescriptorType::eSampledImage:
             {
+                vk::DescriptorImageInfo image_info;
+
                 const auto &iterator = state.pass->textures.find(name);
                 VERIFY(iterator != state.pass->textures.cend());
 
@@ -165,9 +150,11 @@ BackEnd::UpdateDescriptors()
 
                 image_info.imageLayout =
                     vk::ImageLayout::eShaderReadOnlyOptimal;
-                image_info.imageView = texture->image->view;
 
-                desc_write.pImageInfo = &image_info;
+                image_info.imageView = texture->view;
+
+                image_infos.push_back(image_info);
+                desc_write.pImageInfo = &image_infos.at(image_infos.size() - 1);
             }
             break;
         case vk::DescriptorType::eSampler:
@@ -194,6 +181,7 @@ BackEnd::UpdateDescriptors()
 }
 
 
+//-----------------------------------------------------------------------------
 void
 BackEnd::SetShader
         ( const std::shared_ptr<Shader> &shader
@@ -232,9 +220,13 @@ BackEnd::SetShader
         cmd_buffer->setScissor(0, { default_scissor });
     }
 
+    // find a pipeline appropriate for the pass
+    const auto &iterator = pass->pipelines.find(state.render_pass);
+    VERIFY(iterator != pass->pipelines.cend());
+
     // set shaders
     cmd_buffer->bindPipeline( vk::PipelineBindPoint::eGraphics
-                            , pass->pipeline
+                            , iterator->second
     );
 
     cmd_buffer->bindDescriptorSets( vk::PipelineBindPoint::eGraphics
@@ -262,6 +254,59 @@ BackEnd::SetScissor
 }
 
 
+//-----------------------------------------------------------------------------
+void
+BackEnd::SetClearColor
+        ( const std::array<float, 4> &clear_color
+        )
+{
+    state.clear_color = clear_color;
+}
+
+
+//-----------------------------------------------------------------------------
+void
+BackEnd::SetRenderPass
+        ( const PassDescription &pass_description
+        )
+{
+    auto &cmd_buffer   = draw_cmd_buffers_[state.frame_index];
+
+    const auto num_framebuffers = pass_description.frame_buffers.size();
+    auto &frame_buffer =
+        pass_description.frame_buffers[state.frame_index % num_framebuffers];
+
+    // Complete current render pass before
+    // switching to the new one
+    if (state.render_pass)
+    {
+        cmd_buffer->endRenderPass();
+    }
+    state.render_pass = pass_description.render_pass;
+
+    enum { COLOR, DEPTH };
+    std::array<vk::ClearValue, 2> clear_values;
+    clear_values[COLOR].color = vk::ClearColorValue(state.clear_color);
+    clear_values[DEPTH].depthStencil = { 1.0f, 0 };
+
+    // Begin render pass
+    const auto renderpass_begin_info = vk::RenderPassBeginInfo()
+        .setRenderPass(state.render_pass)
+        .setFramebuffer(frame_buffer.get())
+        .setRenderArea(vk::Rect2D( vk::Offset2D(0, 0)
+                                 , vk::Extent2D( hw.draw_rect.width
+                                               , hw.draw_rect.height
+        )))
+        .setClearValueCount(clear_values.size())
+        .setPClearValues(clear_values.data());
+
+    cmd_buffer->beginRenderPass( renderpass_begin_info
+                               , vk::SubpassContents::eInline
+    );
+}
+
+
+//-----------------------------------------------------------------------------
 void
 BackEnd::SetGeometry
         ( DataStream<VertexStream> &vertices
@@ -273,6 +318,7 @@ BackEnd::SetGeometry
 }
 
 
+//-----------------------------------------------------------------------------
 void
 BackEnd::SetGeometry
         ( DataStream<VertexStream> &vertices
@@ -282,13 +328,7 @@ BackEnd::SetGeometry
 }
 
 
-/*!
- * \brief   Binds vertex buffer to pipeline
- * \param [in] vertices vertex stream to bind
- *
- * Flushes vertex buffer before binding and binds it starting from offset
- * set by previous flush. The function updates render state.
- */
+//-----------------------------------------------------------------------------
 void
 BackEnd::BindVertexBuffer
         ( DataStream<VertexStream> &vertices
@@ -305,19 +345,13 @@ BackEnd::BindVertexBuffer
     auto &cmd_buffer   = draw_cmd_buffers_[state.frame_index];
     auto vertex_buffer = vk::Buffer(vertices.gpu_buffer_->buffer);
     cmd_buffer->bindVertexBuffers( 0 // first binding
-                                 , { vertex_buffer }
-                                 , { vertices_offset }
+                                 , { vertex_buffer } // buffers
+                                 , { vertices_offset } // offsets
     );
 }
 
 
-/*!
- * \brief   Binds index buffer to pipeline
- * \param [in] indices index stream to bind
- *
- * Flushes index buffer before binding and binds it starting from offset
- * set by previous flush. The function updates render state.
- */
+//-----------------------------------------------------------------------------
 void
 BackEnd::BindIndexBuffer
         ( DataStream<IndexStream> &indices
@@ -325,8 +359,7 @@ BackEnd::BindIndexBuffer
 {
     state.indices = &indices;
 
-
-    const auto indices_offset = indices.offset_;
+    const auto indices_offset = indices.position_;
     indices << StreamControl::Flush;
 
     auto &cmd_buffer  = draw_cmd_buffers_[state.frame_index];
@@ -338,12 +371,7 @@ BackEnd::BindIndexBuffer
 }
 
 
-/*!
- * \brief   Draws triangles list
- * \param [in] primitives_count amount of triangles in binded vertex buffer
- *
- * TODO: Need to support TS, lines and other topologies
- */
+//-----------------------------------------------------------------------------
 void
 BackEnd::Draw(std::uint32_t primitives_count)
 {
@@ -356,12 +384,7 @@ BackEnd::Draw(std::uint32_t primitives_count)
 }
 
 
-/*!
- * \brief   Draws indexed triangles list
- * \param [in] primitives_count amount of triangles in binded vertex buffer
- *
- * TODO: Need to support TS, lines and other topologies
- */
+//-----------------------------------------------------------------------------
 void
 BackEnd::DrawIndexed(std::uint32_t primitives_count)
 {

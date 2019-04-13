@@ -1,9 +1,11 @@
 #ifndef BACKEND_BACKEND_H_
 #define BACKEND_BACKEND_H_
 
+#include <array>
 #include <memory>
 
 #include "backend/streams.h"
+#include "frontend/render_target.h"
 #include "resources/shader.h"
 
 constexpr std::size_t triangles_per_quad    = 2;
@@ -22,6 +24,9 @@ public:
     void OnFrameEnd(std::uint32_t frame_index);
 
     /* Render state control */
+    void SetClearColor(const std::array<float, 4> &clear_color);
+    void SetRenderPass( const PassDescription &pass_description
+                      );
 
     /*!
      * \brief   Sets scissor test parameters for current pass
@@ -34,16 +39,26 @@ public:
                     , DataStream<IndexStream>  &indices
                     );
     void SetGeometry( DataStream<VertexStream> &vertices );
-    void Draw(std::uint32_t primitives_count);
-    void DrawIndexed(std::uint32_t primitives_count);
+    /*!
+    * \brief   Draws triangles list
+    *
+    * TODO: Need to support TS, lines and other topologies
+    */
+    void Draw( std::uint32_t primitives_count ///< [in] amount of triangles to draw
+             );
+    /*!
+     * \brief   Draws indexed triangles list
+     *
+     * TODO: Need to support TS, lines and other topologies
+     */
+    void DrawIndexed( std::uint32_t primitives_count ///< [in] amount of triangles to draw
+                    );
 
     std::shared_ptr<Texture> GetActiveTexture(std::size_t index) const;
 
     DataStream<VertexStream> vertex_stream;
     DataStream<IndexStream>  index_stream;
     DataStream<IndexStream>  index_cache;
-
-    vk::UniqueRenderPass render_pass;
 
     std::vector<vk::UniqueSemaphore> frame_semaphores;
     std::vector<vk::UniqueSemaphore> render_semaphores;
@@ -54,13 +69,26 @@ private:
     void CreateCommandBuffers();
     void DestroyCommandBuffers();
 
-    void CreateRenderPass();
-    void DestroyRenderPass();
-
+    /*!
+     * \brief   Updates descriptors for current pipeline
+     */
     void UpdateDescriptors();
-    void BindVertexBuffer(DataStream<VertexStream> &vertices);
-    void BindIndexBuffer(DataStream<IndexStream> &indices);
-
+    /*!
+     * \brief   Binds vertex buffer to pipeline
+     *
+     * Flushes vertex buffer before binding and binds it starting from offset
+     * set by previous flush. The function updates render state.
+     */
+    void BindVertexBuffer( DataStream<VertexStream> &vertices ///< [in] vertex stream
+                         );
+    /*!
+     * \brief   Binds index buffer to pipeline
+     *
+     * Flushes index buffer before binding and binds it starting from offset
+     * set by previous flush. The function updates render state.
+     */
+    void BindIndexBuffer( DataStream<IndexStream> &indices ///< [in] index stream
+                        );
     /*!
      * \brief   Invalidates render state
      */
@@ -72,6 +100,10 @@ private:
         DataStream<VertexStream> *vertices; // TODO: not quite elegant
         DataStream<IndexStream>  *indices;
         std::uint32_t frame_index;
+
+        // Render pass state
+        std::array<float, 4> clear_color;
+        vk::RenderPass render_pass;
 
         bool scissor = false;
     } state;

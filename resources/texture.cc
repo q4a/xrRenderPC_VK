@@ -15,6 +15,10 @@ Texture::Texture()
 
 }
 
+Texture::~Texture()
+{
+    Msg("%s: not implemented", __FUNCTION__);
+}
 
 std::shared_ptr<Texture>
 ResourceManager::CreateTexture
@@ -101,9 +105,12 @@ Texture::ApplyNormal()
 {
     if (flags.staging)
     {
-		image->Sync();
-		flags.staging = false; // already resident in device memory
+        image->Sync();
+        flags.staging = false; // already resident in device memory
     }
+
+    // Update view
+    view = image->view;
 }
 
 

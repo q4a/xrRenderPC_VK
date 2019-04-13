@@ -72,6 +72,15 @@ BlenderCompiler::PassBegin
                            , false // A
         );
     }
+    else
+    {
+        // Enable color output
+        BlendColorWriteMask( true // R
+                           , true // G
+                           , true // B
+                           , true // A
+        );
+    }
 }
 
 
@@ -186,12 +195,17 @@ BlenderCompiler::SamplerAnisotropy
 
 void
 BlenderCompiler::BlendAlphaMode
-        ( bool alpha_blend
-        , vk::BlendFactor
-        , vk::BlendFactor
+        ( bool            alpha_blend
+        , vk::BlendFactor blend_source
+        , vk::BlendFactor blend_destination
         )
 {
-    // TBI
+    color_blend_attachment
+        .setBlendEnable(alpha_blend)
+        .setSrcColorBlendFactor(blend_source)
+        .setDstColorBlendFactor(blend_destination)
+        .setSrcAlphaBlendFactor(blend_source)
+        .setDstAlphaBlendFactor(blend_destination);
 }
 
 void
@@ -284,7 +298,7 @@ BlenderCompiler::PassEnd()
          * and shader fetch. So we allocate one buffer object
          * per frame.
          */
-        for (auto index = 0; index < hw.baseRt.size(); index++)
+        for (auto index = 0; index < hw.swapchain_images.size(); index++)
         {
             auto buffer_pointer =
                 std::shared_ptr<StreamBuffer>{ new StreamBuffer{ constant->size

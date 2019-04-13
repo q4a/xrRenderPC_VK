@@ -195,7 +195,7 @@ ShaderPass::AllocateDescriptors()
     std::vector<vk::DescriptorPoolSize> pool_sizes;
     pool_sizes.resize(resources.size());
 
-    const auto descriptors_count = hw.baseRt.size();
+    const auto descriptors_count = hw.swapchain_images.size();
 
     auto i = 0;
     for (const auto &resource : resources)
@@ -300,32 +300,27 @@ ShaderPass::CreatePipeline()
     state__multisampling.minSampleShading = 1.0f;
 
     color_blend_attachment
-        .setBlendEnable(true)
-        .setAlphaBlendOp(vk::BlendOp::eAdd)
-        .setColorWriteMask(vk::ColorComponentFlagBits::eA
-            | vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-            | vk::ColorComponentFlagBits::eB)
-        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-        .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
+        .setColorBlendOp(vk::BlendOp::eAdd);
 
-    state__color_blend.logicOp = vk::LogicOp::eCopy;
     state__color_blend.attachmentCount = 1;
     state__color_blend.pAttachments = &color_blend_attachment;
-    
-    
-    //***
 
-    // Create the pipeline
-    pipeline_create_info
-        .setStageCount(shader_stages.size())
-        .setPStages(shader_stages.data())
-        .setLayout(pipeline_layout)
-        .setRenderPass(backend.render_pass.get())
-        .setSubpass(0) // This one is hardest to identify
-        .setBasePipelineIndex(-1);
+    for (const auto &description : frontend.render_target->render_passes)
+    {
+        // Create the pipeline
+        pipeline_create_info
+            .setStageCount(shader_stages.size())
+            .setPStages(shader_stages.data())
+            .setLayout(pipeline_layout)
+            .setRenderPass(description.second->render_pass)
+            .setSubpass(0)
+            .setBasePipelineIndex(-1);
 
-    pipeline =
-        hw.device->createGraphicsPipeline(nullptr, pipeline_create_info);
+        const auto pipeline =
+            hw.device->createGraphicsPipeline(nullptr, pipeline_create_info);
+
+        pipelines.insert(std::make_pair( description.second->render_pass
+                                       , pipeline
+        ));
+    }
 }
