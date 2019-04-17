@@ -175,18 +175,48 @@ FrontEnd::model_Create
         , IReader *data /* = 0 */
         )
 {
-    return models_.Create(name, data);
+    return models_.CreateModel(name, data);
+}
+
+
+//-----------------------------------------------------------------------------
+IRenderVisual *
+FrontEnd::model_CreatePE
+        ( LPCSTR name
+        )
+{
+    auto effect_descriptor =
+        particles_.FindParticleEffectDescriptor(name);
+    VERIFY(effect_descriptor);
+
+    auto effect = models_.CreateParticleEffect(effect_descriptor);
+    return effect;
 }
 
 
 //-----------------------------------------------------------------------------
 IRenderVisual *
 FrontEnd::model_CreateParticles
-        ( LPCSTR   name
+        ( LPCSTR name
         )
 {
-    //
-    return nullptr;
+    auto effect_descriptor =
+        particles_.FindParticleEffectDescriptor(name);
+
+    if (effect_descriptor)
+    {
+        auto effect = models_.CreateParticleEffect(effect_descriptor);
+        return effect;
+    }
+    else
+    {
+        auto group_descriptor =
+            particles_.FindParticleGroupDescriptor(name);
+        VERIFY(group_descriptor);
+
+        auto group = models_.CreateParticleGroup(group_descriptor);
+        return group;
+    }
 }
 
 

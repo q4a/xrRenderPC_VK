@@ -15,7 +15,7 @@
 #include "resources/manager.h"
 
 
-class FrontEnd
+class FrontEnd final
     : public LegacyInterface
 {
     MenuRender main_menu_;
@@ -43,6 +43,7 @@ public:
     IRender_Target *getTarget() final;
 
     IRenderVisual *model_Create(LPCSTR name, IReader *data = 0) final;
+    IRenderVisual *model_CreatePE(LPCSTR name);
     IRenderVisual *model_CreateParticles(LPCSTR name) final;
 
     struct RenderOptions
