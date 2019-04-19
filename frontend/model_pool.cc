@@ -15,29 +15,29 @@
 
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<RenderVisual>
+std::unique_ptr<RenderVisual>
 ModelPool::CreateInstance
         ( std::uint32_t type
         )
 {
-    std::shared_ptr<RenderVisual> instance;
+    std::unique_ptr<RenderVisual> instance;
 
     switch (type)
     {
     case MT_HIERRARHY:
-        instance = std::make_shared<HierrarhyVisual>();
+        instance = std::make_unique<HierrarhyVisual>();
         break;
     case MT_SKELETON_ANIM:
-        instance = std::make_shared<KinematicsAnimated>();
+        instance = std::make_unique<KinematicsAnimated>();
         break;
     case MT_SKELETON_RIGID:
-        instance = std::make_shared<Kinematics>();
+        instance = std::make_unique<Kinematics>();
         break;
     case MT_PARTICLE_EFFECT:
-        instance = std::make_shared<ParticleEffect>();
+        instance = std::make_unique<ParticleEffect>();
         break;
     case MT_PARTICLE_GROUP:
-        instance = std::make_shared<ParticleGroup>();
+        instance = std::make_unique<ParticleGroup>();
         break;
     default:
         FATAL("Not implemented");
@@ -106,7 +106,8 @@ ModelPool::LoadInstance
     );
     FS.r_close(rstream);
 
-    auto instance = CreateInstance(header.type);
+    std::shared_ptr<RenderVisual> instance =
+        std::move(CreateInstance(header.type));
     g_pGamePersistent->RegisterModel(instance.get());
 
     if (need_to_register)
@@ -200,7 +201,7 @@ ModelPool::CreateParticleGroup
 {
     auto instance = CreateInstance(MT_PARTICLE_GROUP);
     auto pointer =
-        static_cast<ParticleGroup *>(instance.get());
+        dynamic_cast<ParticleGroup *>(instance.release());
 
     pointer->Compile(group_descriptor);
     return pointer;

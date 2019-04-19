@@ -33,7 +33,7 @@ class ModelPool
     void RegisterInstance( const std::string                   &name
                          , const std::shared_ptr<RenderVisual> &instance
                          );
-    std::shared_ptr<RenderVisual> CreateInstance( std::uint32_t type
+    std::unique_ptr<RenderVisual> CreateInstance( std::uint32_t type
                                                 );
 
     std::vector<ModelDescription> models_;
