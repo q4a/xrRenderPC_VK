@@ -1,0 +1,187 @@
+@startuml
+
+interface IRenderVisual {
+	+{abstract} getVisData()
+	+{abstract} getType()
+	+getSubModel()
+	+dcast_PKinematics()
+	+dcast_PKinematicsAnimated()
+	+dcast_ParticleCustom()
+}
+
+package FBasicVisual{
+interface IRender_Mesh {
+	
+}
+
+class dxRender_Visual {
+	+type
+	+vis
+	+shader
+	-- overrides --
+	+getVisData()
+	+getType()
+	-- virtuals --
+	+Render()
+	+Load()
+	+Release()
+	+Copy()
+	+Spawn()
+	+Depart()
+}
+}
+
+IRenderVisual <|-- dxRender_Visual
+
+package FVisual {
+class Fvisual {
+	+m_fast
+	+Render()
+	+Load()
+	+Copy()
+	+Release()
+}
+}
+
+IRender_Mesh <|-- Fvisual
+dxRender_Visual <|-- Fvisual
+
+package FTreeVisual {
+class FTreeVisual {
+	
+}
+
+class FTreeVisual_ST {
+	
+}
+
+class FTreeVisual_PM {
+	
+}
+}
+
+IRender_Mesh <|-- FTreeVisual
+dxRender_Visual <|-- FTreeVisual
+FTreeVisual <|-- FTreeVisual_ST
+FTreeVisual <|-- FTreeVisual_PM
+
+package dx103DFluidVolume {
+class dx103DFluidVolume {
+	
+}
+}
+
+dxRender_Visual <|-- dx103DFluidVolume
+
+package FHierrarhyVisual {
+class FHierrarhyVisual {
+	+children[]
+
+	+Load()
+	+Copy()
+	+Release()
+	+getSubModel()
+}
+}
+
+dxRender_Visual <|-- FHierrarhyVisual
+
+interface IKinematics {
+	
+}
+
+package SkeletonCustom {
+class CKinematics {
+	
+}
+}
+
+FHierrarhyVisual <|-- CKinematics
+IKinematics <|-- CKinematics
+
+interface IKinematicsAnimated {
+	
+}
+
+package SkeletonAnimated {
+class CKinematicsAnimated {
+	
+}
+}
+
+CKinematics <|-- CKinematicsAnimated
+IKinematicsAnimated <|-- CKinematicsAnimated
+
+interface IParticleCustom {
+	
+}
+
+package dxParticleCustom {
+class dxParticleCustom {
+	
+}
+}
+
+IParticleCustom <|- dxParticleCustom
+dxRender_Visual <|-- dxParticleCustom
+
+package CParticleGroup {
+class CParticleGroup {
+	
+}
+}
+dxParticleCustom <|-- CParticleGroup
+
+package ParticleEffect {
+class CParticleEffect {
+	
+}
+}
+
+dxParticleCustom <|-- CParticleEffect
+
+package SkeletonX {
+
+class CSkeletonX {
+	
+}
+}
+
+package FSkinned {
+class CSkeletonX_ext {
+	
+}
+
+class CSkeletonX_ST {
+	
+}
+
+class CSkeletonX_PM {
+	
+}
+}
+
+CSkeletonX <|-- CSkeletonX_ext
+CSkeletonX_ext <|-- CSkeletonX_ST
+Fvisual <|-- CSkeletonX_ST
+
+package FProgressive {
+class FProgressive {
+	
+}
+}
+
+Fvisual <|-- FProgressive
+
+CSkeletonX_ext <|-- CSkeletonX_PM
+FProgressive <|-- CSkeletonX_PM
+
+package FLOD {
+class FLOD {
+	
+}
+}
+
+FHierrarhyVisual <|-- FLOD
+
+@enduml
